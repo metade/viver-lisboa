@@ -1,0 +1,62 @@
+<!-- Political Party Links -->
+{% if page.parties %}
+<div class="d-flex gap-3 flex-wrap align-items-center">
+    {% for party_key in page.parties %} {% case party_key %} {% when 'ps' %}
+    <a
+        href="https://ps.pt"
+        target="_blank"
+        class="party-link"
+        title="Partido Socialista"
+    >
+        <img
+            src="{{ '/assets/images/ps-logo.svg' | relative_url }}"
+            alt="Partido Socialista"
+            class="party-logo"
+        />
+        <span class="visually-hidden">Partido Socialista</span>
+    </a>
+    {% when 'livre' %}
+    <a
+        href="https://partidolivre.pt"
+        target="_blank"
+        class="party-link"
+        title="Livre"
+    >
+        <img
+            src="{{ '/assets/images/livre-logo.svg' | relative_url }}"
+            alt="Livre"
+            class="party-logo"
+        />
+        <span class="visually-hidden">Livre</span>
+    </a>
+    {% when 'bloco' %}
+    <a
+        href="https://bloco.org"
+        target="_blank"
+        class="party-link"
+        title="Bloco de Esquerda"
+    >
+        <img
+            src="{{ '/assets/images/be-logo.svg' | relative_url }}"
+            alt="Bloco de Esquerda"
+            class="party-logo"
+        />
+        <span class="visually-hidden">Bloco de Esquerda</span>
+    </a>
+    {% when 'pan' %}
+    <a
+        href="https://pan.com.pt"
+        target="_blank"
+        class="party-link"
+        title="Pessoas-Animais-Natureza"
+    >
+        <img
+            src="{{ '/assets/images/pan-logo.svg' | relative_url }}"
+            alt="Pessoas-Animais-Natureza"
+            class="party-logo"
+        />
+        <span class="visually-hidden">Pessoas-Animais-Natureza</span>
+    </a>
+    {% endcase %} {% endfor %}
+</div>
+{% endif %}

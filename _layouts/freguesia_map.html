@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en" }}">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {%- seo -%}
+    {%- feed_meta -%}
+    {%- if jekyll.environment == 'production' and site.google_analytics -%}
+      {%- include google-analytics.html -%}
+    {%- endif -%}
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+    <!-- MapLibre GL JS CSS -->
+    <link href="https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css" rel="stylesheet">
+
+    <!-- Map CSS -->
+    <link rel="stylesheet" href="{{ '/assets/css/map.css' | relative_url }}">
+  </head>
+
+  <body class="map-page">
+    <main class="page-content" aria-label="Content">
+      <div id="map"></div>
+      <div class="map-overlay bg-white bg-opacity-75 rounded-3 p-3 shadow">
+          <div class="d-flex justify-content-between">
+              <h1 class="h4 fw-semibold text-dark mb-2">{{ page.title }}</h1>
+              {% include parties.html %}
+          </div>
+          <p class="text-muted mb-0 small">
+              Propostas da coligação Viver Lisboa para as Eleições Autárquicas 2025 para {{ page.freguesia }}
+          </p>
+
+          <div class="mt-3 d-flex gap-2 flex-wrap">
+              <button
+                  type="button"
+                  class="btn btn-primary btn-sm fw-medium shadow-sm"
+                  id="moreInfoBtn"
+              >
+                  <i class="bi bi-info-circle me-2"></i>Mais Informações
+              </button>
+              <a
+                  href="{{ '/propostas/' | relative_url }}"
+                  class="btn btn-link btn-sm fw-medium"
+              >
+                  Propostas
+              </a>
+          </div>
+      </div>
+
+      <!-- Side Panel Content Templates -->
+      <div class="d-none">
+          <!-- Default content -->
+          <div
+              id="defaultContent"
+              class="panel-content"
+              data-content-type="default"
+              data-panel-title="Detalhes da Proposta"
+          >
+              <div class="text-center py-5">
+                  <i class="bi bi-geo-alt text-muted" style="font-size: 3rem"></i>
+                  <p class="text-muted mt-3 mb-0">
+                      Clique num marcador para ver os detalhes.
+                  </p>
+              </div>
+          </div>
+
+          <!-- General info content template -->
+          <div
+              id="generalInfoContent"
+              class="panel-content"
+              data-content-type="general"
+              data-panel-title="Informações Gerais"
+          >
+              <div class="mb-3 pb-2 border-bottom">
+                  <div
+                      class="fw-semibold text-body-secondary small text-uppercase mb-1"
+                  >
+                      Coligação Viver Arroios
+                  </div>
+                  <p class="text-dark">
+                      Arroios é uma freguesia única em Lisboa. Em pleno coração da
+                      cidade, concentra-se o quilómetro quadrado mais densamente
+                      povoado de Portugal (CENSO 2021), onde a pressão sobre o espaço
+                      público, a habitação e a mobilidade se sente todos os dias. ...
+                  </p>
+              </div>
+              <div class="mb-3 pb-2 border-bottom">
+                  <div
+                      class="fw-semibold text-body-secondary small text-uppercase mb-1"
+                  >
+                      Como Usar
+                  </div>
+                  <div class="text-dark">
+                      <ul class="mb-0">
+                          <li>
+                              Clique nos pontos azuis para ver detalhes das propostas
+                          </li>
+                          <li>Use os controlos de zoom (+/-) para navegar</li>
+                          <li>
+                              Use o botão de localização para centrar no seu local
+                          </li>
+                      </ul>
+                  </div>
+              </div>
+              <div class="mb-0">
+                  <div
+                      class="fw-semibold text-body-secondary small text-uppercase mb-1"
+                  >
+                      Navegação
+                  </div>
+                  <div class="text-dark">
+                      Arraste o mapa para explorar diferentes áreas do bairro de
+                      Arroios.
+                  </div>
+              </div>
+          </div>
+
+          <!-- Marker details content container -->
+          <div
+              id="markerContent"
+              class="panel-content"
+              data-content-type="marker"
+              data-panel-title="Detalhes da Proposta"
+          >
+              <!-- This will be populated dynamically by JavaScript -->
+          </div>
+      </div>
+
+      <!-- Side Panel -->
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="detailsPanel" aria-labelledby="detailsPanelLabel">
+        <div class="offcanvas-header bg-light border-bottom">
+          <h5 class="offcanvas-title fw-semibold text-dark" id="detailsPanelLabel">Detalhes da Proposta</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body" id="panelBody">
+          <!-- Content will be loaded from page templates -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+    <!-- MapLibre GL JS -->
+    <script src="https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js"></script>
+
+    <!-- PMTiles -->
+    <script src="https://unpkg.com/pmtiles@4.3.0/dist/pmtiles.js"></script>
+
+    <!-- Map JS -->
+    <script src="{{ '/assets/js/map.js' | relative_url }}"></script>
+  </body>
+</html>

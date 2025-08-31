@@ -1,0 +1,117 @@
+/* Bootstrap Icons */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css");
+
+/* Essential map-specific styles that can't be replaced with Bootstrap */
+body.map-page {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100vh;
+}
+
+.map-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    max-width: 340px;
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Custom button hover effect */
+.map-overlay .btn:hover {
+    transform: translateY(-1px);
+}
+
+/* MapLibre GL controls styling */
+.maplibregl-ctrl-group {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.maplibregl-ctrl button {
+    border-radius: 6px !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Side Panel width */
+#detailsPanel {
+    --bs-offcanvas-width: 400px;
+}
+
+/* Selected marker highlight animation */
+.propostas-marker-selected {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .map-overlay {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        max-width: none;
+    }
+
+    #detailsPanel {
+        --bs-offcanvas-width: 100vw;
+    }
+}
+
+/* Party link styling */
+.party-link {
+    display: inline-block;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+    text-decoration: none;
+}
+
+.party-link:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+/* Party logo styling */
+.party-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
