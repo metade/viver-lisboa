@@ -1,0 +1,125 @@
+---
+layout: default
+---
+
+<div class="container-fluid px-0">
+    <!-- Header -->
+    <div class="bg-primary text-white py-4 mb-5">
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <h1 class="display-4 fw-bold mb-2">
+                        {{ page.title | default: "Todas as Propostas" }}
+                    </h1>
+                    <p class="lead mb-0">
+                        {{ page.description | default: "Conheça as nossas
+                        propostas para transformar Arroios" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="container mb-4">
+        <div class="row">
+            <div class="col">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{{ site.baseurl }}/">
+                                <i class="bi bi-house-fill"></i> Início
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            Propostas
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="container mb-4">
+        <div class="row">
+            <div class="col">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <a
+                        href="{{ site.baseurl }}/#map"
+                        class="btn btn-outline-primary"
+                    >
+                        <i class="bi bi-map-fill me-2"></i>
+                        Ver no Mapa
+                    </a>
+                    <div class="ms-auto">
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="searchPropostas"
+                            placeholder="Pesquisar propostas..."
+                            style="min-width: 300px"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Proposals Grid -->
+    <div class="container mb-5">
+        <div class="row g-4" id="propostasGrid">
+            <!-- Proposals content will be inserted here -->
+            {{ content }}
+        </div>
+
+        <!-- No results message -->
+        <div id="noResults" class="text-center py-5" style="display: none">
+            <i class="bi bi-search text-muted" style="font-size: 3rem"></i>
+            <h3 class="text-muted mt-3">Nenhuma proposta encontrada</h3>
+            <p class="text-muted">Tente pesquisar com outros termos</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        setupSearch();
+    });
+
+    function setupSearch() {
+        const searchInput = document.getElementById("searchPropostas");
+        searchInput.addEventListener("input", function (e) {
+            filterPropostas(e.target.value.toLowerCase());
+        });
+    }
+
+    function filterPropostas(searchTerm) {
+        const cards = document.querySelectorAll(".proposta-card");
+        const noResults = document.getElementById("noResults");
+        let visibleCount = 0;
+
+        cards.forEach((card) => {
+            const title = card
+                .querySelector(".card-title")
+                .textContent.toLowerCase();
+            const description = card
+                .querySelector(".card-text")
+                .textContent.toLowerCase();
+
+            if (
+                title.includes(searchTerm) ||
+                description.includes(searchTerm) ||
+                searchTerm === ""
+            ) {
+                card.parentElement.style.display = "block";
+                visibleCount++;
+            } else {
+                card.parentElement.style.display = "none";
+            }
+        });
+
+        noResults.style.display =
+            visibleCount === 0 && searchTerm !== "" ? "block" : "none";
+    }
+</script>

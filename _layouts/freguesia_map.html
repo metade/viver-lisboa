@@ -41,7 +41,7 @@
                   <i class="bi bi-info-circle me-2"></i>Mais Informações
               </button>
               <a
-                  href="{{ '/propostas/' | relative_url }}"
+                  href="{{ page.url | append: 'propostas' | relative_url }}"
                   class="btn btn-link btn-sm fw-medium"
               >
                   Propostas
@@ -66,56 +66,7 @@
               </div>
           </div>
 
-          <!-- General info content template -->
-          <div
-              id="generalInfoContent"
-              class="panel-content"
-              data-content-type="general"
-              data-panel-title="Informações Gerais"
-          >
-              <div class="mb-3 pb-2 border-bottom">
-                  <div
-                      class="fw-semibold text-body-secondary small text-uppercase mb-1"
-                  >
-                      Coligação Viver Arroios
-                  </div>
-                  <p class="text-dark">
-                      Arroios é uma freguesia única em Lisboa. Em pleno coração da
-                      cidade, concentra-se o quilómetro quadrado mais densamente
-                      povoado de Portugal (CENSO 2021), onde a pressão sobre o espaço
-                      público, a habitação e a mobilidade se sente todos os dias. ...
-                  </p>
-              </div>
-              <div class="mb-3 pb-2 border-bottom">
-                  <div
-                      class="fw-semibold text-body-secondary small text-uppercase mb-1"
-                  >
-                      Como Usar
-                  </div>
-                  <div class="text-dark">
-                      <ul class="mb-0">
-                          <li>
-                              Clique nos pontos azuis para ver detalhes das propostas
-                          </li>
-                          <li>Use os controlos de zoom (+/-) para navegar</li>
-                          <li>
-                              Use o botão de localização para centrar no seu local
-                          </li>
-                      </ul>
-                  </div>
-              </div>
-              <div class="mb-0">
-                  <div
-                      class="fw-semibold text-body-secondary small text-uppercase mb-1"
-                  >
-                      Navegação
-                  </div>
-                  <div class="text-dark">
-                      Arraste o mapa para explorar diferentes áreas do bairro de
-                      Arroios.
-                  </div>
-              </div>
-          </div>
+          {{content}}
 
           <!-- Marker details content container -->
           <div

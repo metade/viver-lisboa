@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 # Jekyll version
 gem "jekyll", "~> 4.4.1"
+gem "logger"
 
 # Jekyll plugins
 group :jekyll_plugins do

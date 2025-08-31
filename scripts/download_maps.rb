@@ -202,6 +202,7 @@ class GoogleMyMapsDownloader
     # Add all properties as front matter variables
     properties.each do |key, value|
       next if key == "slug" # Already added
+      next if ["description", "tessellate", "extrude", "visibility"].include?(key) # fields to ignore
       next if value.nil? || value.to_s.strip.empty?
 
       # Clean the key name
@@ -273,7 +274,7 @@ class GoogleMyMapsDownloader
   def generate_index_content(features)
     content = <<~FRONTMATTER
       ---
-      layout: propostas_index
+      layout: propostas
       title: "Todas as Propostas"
       description: "Explore todas as propostas da coligação Viver Arroios para as Eleições Autárquicas 2025"
       ---
@@ -293,7 +294,7 @@ class GoogleMyMapsDownloader
     geometry = feature["geometry"]
 
     proposta = escape_html(properties["proposta"] || "Proposta")
-    description = escape_html(properties["description"] || "")
+    description = escape_html(properties["descricao"] || "")
     slug = properties["slug"]
 
     # Handle images
@@ -329,7 +330,7 @@ class GoogleMyMapsDownloader
           </div>
           <div class="card-footer bg-transparent">
             <div class="d-flex justify-content-between align-items-center">
-              <a href="{{ site.baseurl }}/propostas/#{slug}" class="btn btn-primary btn-sm">
+              <a href="{{ site.baseurl }}/freguesias/#{freguesia_slug}/propostas/#{slug}" class="btn btn-primary btn-sm">
                 Ver Detalhes
               </a>
               <small class="text-muted">
@@ -354,7 +355,7 @@ class GoogleMyMapsDownloader
     # Create a unique filename based on URL hash and feature index
     url_hash = Digest::MD5.hexdigest(url)[0..8]
     extension = extract_file_extension(url)
-    filename = "#{@layer_name}_#{feature_index}_#{url_hash}#{extension}"
+    filename = "#{freguesia_slug}_#{feature_index}_#{url_hash}#{extension}"
     local_path = File.join(@images_dir, filename)
     relative_path = "./#{local_path}"
 
