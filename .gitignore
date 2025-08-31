@@ -5,6 +5,8 @@ _site/
 .jekyll-metadata
 
 assets/data/*.pmtiles
+assets/data/images
+freguesias/*/propostas
 
 # Bundler
 .bundle/
