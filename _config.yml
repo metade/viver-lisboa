@@ -25,6 +25,9 @@ defaults:
     values:
       layout: "default"
 
+include:
+  - _headers
+
 # Exclude from processing
 exclude:
   - .sass-cache/
