@@ -1,0 +1,76 @@
+name: Build geo + Jekyll → Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main] # change if your default branch differs
+  workflow_dispatch: {} # allow manual runs
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # --- Geo toolchain for your preprocessing ---
+      - name: Install geospatial dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tippecanoe gdal-bin libproj-dev libgeos-dev
+
+      # --- Ruby/Jekyll build ---
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Install Ruby dependencies
+        run: bundle install
+
+      - name: Build data
+        env:
+          JEKYLL_ENV: production
+          BUNDLE_WITHOUT: development:test
+        run: |
+          bundle exec rake build
+
+      - name: Build Jekyll
+        env:
+          JEKYLL_ENV: production
+          BUNDLE_WITHOUT: development:test
+        run: |
+          bundle exec jekyll build -s . -d _site
+
+      # (Optional) Upload artifact for debugging
+      - name: Archive site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: _site
+
+      # --- Deploy to Cloudflare Pages ---
+      - name: Install Wrangler
+        run: npm i -g wrangler
+
+      - name: Deploy to Cloudflare Pages (production)
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_PAGES_PROJECT: ${{ secrets.CF_PAGES_PROJECT }}
+        run: |
+          wrangler pages deploy _site \
+            --project-name "$CF_PAGES_PROJECT" \
+            --branch production
+
+      # (Optional) Warm critical pages to fill edge cache quickly
+      - name: Warm edge cache (optional)
+        run: |
+          urls=(
+            "https://www.viver-lisboa.org/"
+            "https://www.viver-lisboa.org/freguesias/arroios/"
+          )
+          for u in "${urls[@]}"; do
+            curl -sS -L -o /dev/null "$u" || true
+          done
