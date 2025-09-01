@@ -62,7 +62,7 @@ jobs:
         run: |
           wrangler pages deploy _site \
             --project-name "$CF_PAGES_PROJECT" \
-            --branch production
+            --branch main
 
       # (Optional) Warm critical pages to fill edge cache quickly
       - name: Warm edge cache (optional)
