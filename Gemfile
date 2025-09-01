@@ -3,6 +3,7 @@ source "https://rubygems.org"
 # Jekyll version
 gem "jekyll", "~> 4.4.1"
 gem "logger"
+gem "http", "~> 5.0"
 
 # Jekyll plugins
 group :jekyll_plugins do
@@ -15,7 +16,6 @@ end
 group :development do
   gem "standardrb", "~> 1.0"
   gem "webrick", git: "https://github.com/metade/webrick.git", branch: "fix-if-range-header-returning-304"
-  gem "http", "~> 5.0"
 end
 
 # Windows and JRuby does not include zoneinfo files, so bundle the tzinfo-data gem
