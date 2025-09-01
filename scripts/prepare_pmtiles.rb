@@ -1,7 +1,7 @@
 class PreparePmtiles
   def initialize(freguesia_slug:)
     @freguesia_slug = freguesia_slug
-    @output = "freguesias/#{freguesia_slug}/propostas/data.pmtiles"
+    @output = "assets/data/#{freguesia_slug}.pmtiles"
     @sources = [
       "tmp/#{freguesia_slug}/propostas.geojson",
       "data/freguesias/#{freguesia_slug}/border.geojson"

@@ -49,5 +49,6 @@ task build: :freguesias
 
 # Files to clean
 CLEAN.include("tmp/*")
+CLEAN.include("assets/data/*.pmtiles")
 CLEAN.include("assets/data/images/*")
 CLEAN.include("freguesias/*/propostas/*")

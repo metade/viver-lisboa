@@ -18,6 +18,12 @@
 
     <!-- Map CSS -->
     <link rel="stylesheet" href="{{ '/assets/css/map.css' | relative_url }}">
+
+    <script>
+      window.pageData = {
+        freguesiaSlug: {{ page.freguesia_slug | jsonify }}
+      };
+    </script>
   </head>
 
   <body class="map-page">
