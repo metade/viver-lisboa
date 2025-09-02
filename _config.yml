@@ -42,6 +42,15 @@ exclude:
   - vendor/ruby/
   - README.md
   - .standardrb.yml
+  - data
+  - scripts
+  - Rakefile
+
+# Asset fingerprinting configuration
+asset_fingerprinting:
+  enabled: true
+  algorithm: "md5"
+  length: 8
 
 # Permalink structure
 permalink: /:title/

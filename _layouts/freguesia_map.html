@@ -17,11 +17,12 @@
     <link href="https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css" rel="stylesheet">
 
     <!-- Map CSS -->
-    <link rel="stylesheet" href="{{ '/assets/css/map.css' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/assets/css/map.css' | asset_url }}">
 
     <script>
       window.pageData = {
-        freguesiaSlug: {{ page.freguesia_slug | jsonify }}
+        freguesiaSlug: {{ page.freguesia_slug | jsonify }},
+        pmtilesUrl: {{ '/assets/data/' | append: page.freguesia_slug | append: '.pmtiles' | asset_url | jsonify }}
       };
     </script>
   </head>
@@ -107,6 +108,6 @@
     <script src="https://unpkg.com/pmtiles@4.3.0/dist/pmtiles.js"></script>
 
     <!-- Map JS -->
-    <script src="{{ '/assets/js/map.js' | relative_url }}"></script>
+    <script src="{{ '/assets/js/map.js' | asset_url }}"></script>
   </body>
 </html>

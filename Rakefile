@@ -47,8 +47,21 @@ end
 desc "Download data and generate PMTiles (full workflow)"
 task build: :freguesias
 
+desc "Clean assets and build artifacts"
+task :clean_assets do
+  puts "Cleaning fingerprinted assets..."
+  system("ruby scripts/asset_utils.rb clean") if File.exist?("scripts/asset_utils.rb")
+end
+
+desc "Show asset statistics"
+task :asset_stats do
+  system("ruby scripts/asset_utils.rb stats") if File.exist?("scripts/asset_utils.rb")
+end
+
 # Files to clean
 CLEAN.include("tmp/*")
 CLEAN.include("assets/data/*.pmtiles")
 CLEAN.include("assets/data/images/*")
 CLEAN.include("freguesias/*/propostas/*")
+CLEAN.include("_site/**/*")
+CLOBBER.include("assets/**/*-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9].*")

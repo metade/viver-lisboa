@@ -87,8 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Add PMTiles source
     map.addSource("pmtiles-source", {
       type: "vector",
-      url:
-        "pmtiles:///assets/data/" + window.pageData.freguesiaSlug + ".pmtiles",
+      url: "pmtiles://" + window.pageData.pmtilesUrl,
     });
 
     // Add Freguesia border outline
