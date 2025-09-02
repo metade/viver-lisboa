@@ -43,24 +43,21 @@ jobs:
         run: |
           bundle exec jekyll build -s . -d _site
 
-      - name: Install AWS CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y awscli
+      - name: Configure AWS CLI for R2
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          aws-region: auto
 
       - name: Upload PMTiles to R2
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: |
           ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-          # upload every .pmtiles under assets/data/
           shopt -s nullglob
           for f in assets/data/*.pmtiles; do
-            # Set content-type, disable compression, set long cache
             aws s3 cp "$f" "s3://${R2_BUCKET}/$(basename "$f")" \
               --endpoint-url "$ENDPOINT" \
               --content-type "application/vnd.pmtiles" \
