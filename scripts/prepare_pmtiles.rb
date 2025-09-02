@@ -21,7 +21,8 @@ class PreparePmtiles
       "--no-feature-limit",
       "--no-tile-size-limit",
       "--simplification=1",
-      "-o", @output,
+      "--force",
+      "-o", @output
     ] + @sources
 
     p cmd

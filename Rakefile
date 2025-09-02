@@ -14,8 +14,8 @@ desc "Prepare freguesia data"
 task freguesias: ["tmp"] do
   # Initialize Jekyll site
   config = Jekyll.configuration({
-    'source' => Dir.pwd,
-    'destination' => '_site'
+    "source" => Dir.pwd,
+    "destination" => "_site"
   })
 
   site = Jekyll::Site.new(config)
@@ -30,7 +30,7 @@ task freguesias: ["tmp"] do
     puts "\nProcessing: #{page.path}"
 
     # Extract freguesia slug from path
-    freguesia_slug = page.path.split('/')[1]
+    freguesia_slug = page.path.split("/")[1]
 
     downloader = GoogleMyMapsDownloader.new(
       freguesia_slug: freguesia_slug,

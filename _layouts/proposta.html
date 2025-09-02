@@ -85,7 +85,7 @@ layout: default
                         <div class="col-md-6">
                             <div class="card border-0 shadow-sm">
                                 <img
-                                    src="{{ site.baseurl }}/{{ image }}"
+                                    src="{{ image | asset_url }}"
                                     class="card-img-top rounded"
                                     alt="Imagem da proposta {{ page.proposta }}"
                                     style="height: 300px; object-fit: cover"

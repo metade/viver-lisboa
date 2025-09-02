@@ -26,6 +26,7 @@ class GoogleMyMapsDownloader
     download_kml
     convert_to_geojson
     filter_features
+    tidy_up_features
     download_images
     generate_jekyll_pages
     generate_propostas_index
@@ -121,6 +122,17 @@ class GoogleMyMapsDownloader
     end
 
     log "Filtered #{@geojson_data["features"].length} features down to #{@valid_features.length} valid features"
+  end
+
+  def tidy_up_features
+    @valid_features.map! do |feature|
+      feature["properties"].transform_keys!(&:downcase)
+
+      feature["properties"] = feature["properties"].slice(
+        "slug", "name", "proposta", "sumario", "descricao", "eixo", "gx_media_links"
+      )
+      feature
+    end
   end
 
   def download_images
@@ -357,7 +369,7 @@ class GoogleMyMapsDownloader
     extension = extract_file_extension(url)
     filename = "#{freguesia_slug}_#{feature_index}_#{url_hash}#{extension}"
     local_path = File.join(@images_dir, filename)
-    relative_path = "./#{local_path}"
+    image_url_path = "/#{local_path}"
 
     # Skip if already downloaded
     if @downloaded_images[url]
@@ -367,8 +379,8 @@ class GoogleMyMapsDownloader
     # Skip if file already exists
     if File.exist?(local_path)
       log "Image already exists: #{filename}"
-      @downloaded_images[url] = relative_path
-      return relative_path
+      @downloaded_images[url] = image_url_path
+      return image_url_path
     end
 
     log "Downloading image: #{url} -> #{filename}"
@@ -391,9 +403,9 @@ class GoogleMyMapsDownloader
       # Convert response body to string for file writing
       body_content = response.body.to_s
       File.write(local_path, body_content)
-      @downloaded_images[url] = relative_path
+      @downloaded_images[url] = image_url_path
       log "Successfully downloaded: #{filename} (#{format_file_size(body_content.length)})"
-      relative_path
+      image_url_path
     else
       log "Failed to download #{url}: HTTP #{response.code}"
       nil

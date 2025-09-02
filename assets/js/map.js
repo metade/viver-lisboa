@@ -188,11 +188,8 @@ document.addEventListener("DOMContentLoaded", function () {
       map.getCanvas().style.cursor = "";
     });
 
-    // Add click handler for propostas markers
-    map.on("click", "propostas-markers", function (e) {
-      const properties = e.features[0].properties;
-
-      // Remove previous selection styling
+    // Helper function to remove previous selection styling
+    function removeSelectionStyling() {
       if (map.getLayer("propostas-markers-selected")) {
         map.removeLayer("propostas-markers-selected");
         map.removeSource("propostas-markers-selected");
@@ -201,13 +198,15 @@ document.addEventListener("DOMContentLoaded", function () {
         map.removeLayer("propostas-polygons-selected");
         map.removeSource("propostas-polygons-selected");
       }
+    }
 
-      // Highlight selected marker
+    // Helper function to add highlight styling for markers
+    function highlightMarker(feature) {
       map.addSource("propostas-markers-selected", {
         type: "geojson",
         data: {
           type: "FeatureCollection",
-          features: [e.features[0]],
+          features: [feature],
         },
       });
 
@@ -223,96 +222,15 @@ document.addEventListener("DOMContentLoaded", function () {
           "circle-opacity": 0.9,
         },
       });
+    }
 
-      // Create panel content for marker details
-      let panelContent = "";
-
-      console.log(properties);
-
-      panelContent += `
-        <h3>${properties["Name"]}</h3>
-        <p class="lead">${properties["proposta"]}</p>
-        <p>${properties["description"]}</p>
-      `;
-
-      // Add link to full proposal page if slug exists
-      if (properties["slug"] && properties["slug"].trim() !== "") {
-        panelContent += `
-          <div class="mt-3 mb-3">
-            <a href="./propostas/${properties["slug"]}" class="btn btn-primary btn-sm">
-              <i class="bi bi-arrow-right-circle-fill me-2"></i>
-              Ver Proposta Completa
-            </a>
-          </div>
-        `;
-      }
-
-      // Add images if gx_media_links exists
-      if (
-        properties["gx_media_links"] &&
-        properties["gx_media_links"].trim() !== ""
-      ) {
-        const imageUrls = properties["gx_media_links"].trim().split(/\s+/);
-        panelContent += '<div class="mt-3">';
-        imageUrls.forEach((imageUrl, index) => {
-          panelContent += `
-            <img src="${imageUrl}" class="img-fluid rounded mb-2" alt="Proposta image ${index + 1}" style="max-width: 100%; height: auto; display: block;">
-          `;
-        });
-        panelContent += "</div>";
-      }
-      // // Add all properties to the panel
-      // Object.keys(properties).forEach((key) => {
-      //   if (
-      //     properties[key] !== null &&
-      //     properties[key] !== undefined &&
-      //     properties[key] !== ""
-      //   ) {
-      //     panelContent += `
-      //     <div class="mb-3 pb-2 border-bottom">
-      //       <div class="fw-semibold text-body-secondary small text-uppercase mb-1">${key}</div>
-      //       <div class="text-dark">${properties[key]}</div>
-      //     </div>
-      //   `;
-      //   }
-      // });
-
-      // Show marker content and populate it
-      showPanelContent("markerContent");
-      const markerContentInPanel = document.querySelector(
-        "#panelBody #markerContent",
-      );
-      if (markerContentInPanel) {
-        markerContentInPanel.innerHTML = panelContent;
-      }
-
-      // Show the offcanvas panel
-      const panel = new bootstrap.Offcanvas(
-        document.getElementById("detailsPanel"),
-      );
-      panel.show();
-    });
-
-    // Add click handler for propostas polygons
-    map.on("click", "propostas-polygons-fill", function (e) {
-      const properties = e.features[0].properties;
-
-      // Remove previous selection styling
-      if (map.getLayer("propostas-markers-selected")) {
-        map.removeLayer("propostas-markers-selected");
-        map.removeSource("propostas-markers-selected");
-      }
-      if (map.getLayer("propostas-polygons-selected")) {
-        map.removeLayer("propostas-polygons-selected");
-        map.removeSource("propostas-polygons-selected");
-      }
-
-      // Highlight selected polygon
+    // Helper function to add highlight styling for polygons
+    function highlightPolygon(feature) {
       map.addSource("propostas-polygons-selected", {
         type: "geojson",
         data: {
           type: "FeatureCollection",
-          features: [e.features[0]],
+          features: [feature],
         },
       });
 
@@ -325,16 +243,17 @@ document.addEventListener("DOMContentLoaded", function () {
           "fill-opacity": 0.6,
         },
       });
+    }
 
-      // Create panel content for polygon details
-      let panelContent = "";
-
+    // Helper function to create panel content for a proosta
+    function createPropostaPanelContent(properties) {
       console.log(properties);
 
-      panelContent += `
-        <h3>${properties["Name"]}</h3>
+      let panelContent = `
+        <h3>${properties["name"]}</h3>
         <p class="lead">${properties["proposta"]}</p>
-        <p>${properties["description"]}</p>
+        <p>${properties["sumario"]}</p>
+        <p><span class="badge text-bg-primary">${properties["eixo"]}</span></p>
       `;
 
       // Add link to full proposal page if slug exists
@@ -364,6 +283,11 @@ document.addEventListener("DOMContentLoaded", function () {
         panelContent += "</div>";
       }
 
+      return panelContent;
+    }
+
+    // Helper function to show panel with content
+    function showPanelWithContent(panelContent) {
       // Show marker content and populate it
       showPanelContent("markerContent");
       const markerContentInPanel = document.querySelector(
@@ -378,6 +302,36 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("detailsPanel"),
       );
       panel.show();
+    }
+
+    // Add click handler for propostas markers
+    map.on("click", "propostas-markers", function (e) {
+      const properties = e.features[0].properties;
+
+      // Remove previous selection styling
+      removeSelectionStyling();
+
+      // Highlight selected marker
+      highlightMarker(e.features[0]);
+
+      // Create panel content and show panel
+      const panelContent = createPropostaPanelContent(properties);
+      showPanelWithContent(panelContent);
+    });
+
+    // Add click handler for propostas polygons
+    map.on("click", "propostas-polygons-fill", function (e) {
+      const properties = e.features[0].properties;
+
+      // Remove previous selection styling
+      removeSelectionStyling();
+
+      // Highlight selected polygon
+      highlightPolygon(e.features[0]);
+
+      // Create panel content and show panel
+      const panelContent = createPropostaPanelContent(properties);
+      showPanelWithContent(panelContent);
     });
 
     console.log("Propostas layer loaded successfully!");
@@ -423,14 +377,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Add event listener for the more info button
   document.getElementById("moreInfoBtn").addEventListener("click", function () {
     // Remove previous selection styling if exists
-    if (map.getLayer("propostas-markers-selected")) {
-      map.removeLayer("propostas-markers-selected");
-      map.removeSource("propostas-markers-selected");
-    }
-    if (map.getLayer("propostas-polygons-selected")) {
-      map.removeLayer("propostas-polygons-selected");
-      map.removeSource("propostas-polygons-selected");
-    }
+    removeSelectionStyling();
 
     // Show general info content
     showPanelContent("generalInfoContent");
