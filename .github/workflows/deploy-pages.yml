@@ -54,7 +54,7 @@ jobs:
         run: |
           ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           shopt -s nullglob
-          for f in assets/data/*.pmtiles; do
+          for f in _site/assets/data/*.pmtiles; do
             aws s3 cp "$f" "s3://${R2_BUCKET}/$(basename "$f")" \
               --endpoint-url "$ENDPOINT" \
               --content-type "application/vnd.pmtiles" \
