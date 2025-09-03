@@ -1,6 +1,6 @@
 <!-- Political Party Links -->
 {% if page.parties %}
-<div class="d-flex gap-3 flex-wrap align-items-center">
+<div class="d-flex gap-3 flex-nowrap align-items-start">
     {% for party_key in page.parties %} {% case party_key %} {% when 'ps' %}
     <a
         href="https://ps.pt"

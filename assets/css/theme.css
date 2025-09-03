@@ -1,0 +1,191 @@
+/* 1) Font */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap");
+
+/* 2) Core tokens */
+:root {
+    /* Brand palette */
+    --brand-teal: #3dadbc;
+    --brand-red: #ed4154;
+    --brand-yellow: #ffb91b;
+    --brand-green: #66bc3d;
+    --brand-purple: #7a3dbc;
+    --brand-slate: #4b5d73;
+    --brand-white: #ffffff;
+
+    /* Bootstrap colour roles */
+    --bs-primary: var(--brand-teal);
+    --bs-secondary: var(--brand-slate);
+    --bs-success: var(--brand-green);
+    --bs-danger: var(--brand-red);
+    --bs-warning: var(--brand-yellow);
+    --bs-info: #3fbfd0; /* optional lighter teal */
+    --bs-light: #f5f7f8;
+    --bs-dark: #1f2a33;
+
+    /* Typography */
+    --bs-font-sans-serif:
+        "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans",
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+        "Noto Color Emoji";
+
+    /* Text colours (tuned for good contrast) */
+    --bs-body-color: #222b33;
+    --bs-secondary-color: #6c7b89;
+    --bs-link-color: var(--bs-primary);
+    --bs-link-hover-color: #2f8e9a;
+}
+
+/* 3) Headings & emphasis */
+h1,
+h2,
+.display-1,
+.display-2,
+.h1,
+.h2,
+.display-1,
+.display-2 {
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    text-transform: uppercase; /* matches the poster’s headline treatment */
+}
+
+h3,
+h4,
+.h3,
+.h4 {
+    font-weight: 700;
+}
+strong,
+.fw-semibold {
+    font-weight: 600 !important;
+}
+
+/* 4) Buttons (primary teal + red accent variant) */
+.btn-primary {
+    --bs-btn-bg: var(--brand-teal);
+    --bs-btn-border-color: var(--brand-teal);
+    --bs-btn-hover-bg: #2f9eac;
+    --bs-btn-hover-border-color: #2f9eac;
+    --bs-btn-active-bg: #278c99;
+    --bs-btn-active-border-color: #278c99;
+    --bs-btn-color: #fff;
+}
+
+.btn-secondary {
+    --bs-btn-bg: var(--brand-slate);
+    --bs-btn-border-color: var(--brand-slate);
+    --bs-btn-color: #fff;
+    --bs-btn-hover-bg: #425267;
+    --bs-btn-hover-border-color: #425267;
+}
+
+/* Accent (red) button */
+.btn-accent,
+.btn-danger {
+    --bs-btn-bg: var(--brand-red);
+    --bs-btn-border-color: var(--brand-red);
+    --bs-btn-color: #fff;
+    --bs-btn-hover-bg: #d63a4c;
+    --bs-btn-hover-border-color: #d63a4c;
+    --bs-btn-active-bg: #bf3343;
+    --bs-btn-active-border-color: #bf3343;
+}
+
+/* 5) Badges, alerts, links (quick theming) */
+.badge.bg-primary {
+    background-color: var(--brand-teal) !important;
+}
+.badge.bg-danger {
+    background-color: var(--brand-red) !important;
+}
+.badge.bg-warning {
+    background-color: var(--brand-yellow) !important;
+    color: #1f2328;
+}
+.badge.bg-success {
+    background-color: var(--brand-green) !important;
+}
+
+.alert-primary {
+    --bs-alert-bg: #e6f6f8;
+    --bs-alert-border-color: #bfe8ee;
+    --bs-alert-color: #12545c;
+}
+.alert-danger {
+    --bs-alert-bg: #fde9ec;
+    --bs-alert-border-color: #f7c2ca;
+    --bs-alert-color: #7b1320;
+}
+
+/* 6) “Poster stripe” utility (red bar with white bold text) */
+.highlight-block {
+    background: var(--brand-red);
+    color: #fff;
+    font-weight: 800;
+    text-transform: none; /* keep sentence case if desired */
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.375rem;
+}
+
+/* 7) Hero background similar to the poster */
+.hero-teal {
+    background: radial-gradient(
+        1200px 800px at 10% 10%,
+        #3fbfd0 0%,
+        #2ea9b8 50%,
+        #289aaa 100%
+    );
+    color: #fff;
+}
+.hero-teal .btn,
+.hero-teal a {
+    color: #fff;
+}
+.hero-teal .btn-outline-light {
+    --bs-btn-color: #fff;
+    --bs-btn-border-color: #fff;
+    --bs-btn-hover-color: #1b2a33;
+    --bs-btn-hover-bg: #fff;
+    --bs-btn-hover-border-color: #fff;
+}
+
+/* 8) Navbars / cards tuned to palette */
+.navbar.bg-primary,
+.navbar.navbar-dark {
+    --bs-navbar-color: rgba(255, 255, 255, 0.85);
+    --bs-navbar-hover-color: #fff;
+    --bs-navbar-brand-color: #fff;
+    --bs-navbar-brand-hover-color: #fff;
+}
+
+.card {
+    border-color: #e6eaee;
+    box-shadow: 0 6px 20px rgba(31, 42, 51, 0.06);
+    border-radius: 1rem;
+}
+
+/* 9) Utilities for quick brand usage */
+.text-teal {
+    color: var(--brand-teal) !important;
+}
+.text-slate {
+    color: var(--brand-slate) !important;
+}
+.text-accent {
+    color: var(--brand-red) !important;
+}
+.bg-teal {
+    background-color: var(--brand-teal) !important;
+}
+.bg-slate {
+    background-color: var(--brand-slate) !important;
+}
+.bg-accent {
+    background-color: var(--brand-red) !important;
+}
+.bg-hero {
+    background: #2ea9b8 !important;
+    color: #fff !important;
+}
