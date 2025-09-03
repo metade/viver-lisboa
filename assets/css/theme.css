@@ -252,3 +252,30 @@ strong,
     background: #2ea9b8 !important;
     color: #fff !important;
 }
+
+/* 10) Party logos in navbar */
+.party-link {
+    display: inline-block;
+    transition: opacity 0.2s ease;
+    text-decoration: none !important;
+}
+
+.party-link:hover {
+    opacity: 0.8;
+}
+
+.party-logo {
+    height: 30px;
+    width: auto;
+}
+
+.party-link:hover .party-logo {
+    opacity: 0.8;
+}
+
+/* Responsive adjustments for party logos */
+@media (max-width: 768px) {
+    .party-logo {
+        height: 24px;
+    }
+}

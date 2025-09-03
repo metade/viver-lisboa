@@ -93,25 +93,3 @@ body.map-page {
         --bs-offcanvas-width: 100vw;
     }
 }
-
-/* Party link styling */
-.party-link {
-    display: inline-block;
-    transition: all 0.2s ease;
-    opacity: 0.8;
-    text-decoration: none;
-}
-
-.party-link:hover {
-    opacity: 1;
-    transform: translateY(-1px);
-}
-
-/* Party logo styling */
-.party-logo {
-    width: 28px;
-    height: 28px;
-    object-fit: contain;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-}

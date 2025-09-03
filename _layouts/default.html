@@ -29,22 +29,24 @@
               </h1>
           </a>
 
-          {% if false %}
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ '/' | relative_url }}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ '/about' | relative_url }}">About</a>
-                </li>
-                </ul>
-            </div>
-          {% endif %}
+          <!-- Parties section on the right -->
+          <div class="navbar-nav ms-auto">
+            <!-- Find freguesia page data if freguesia_slug is specified -->
+            {% if page.freguesia_slug %}
+              {% assign freguesia_path = "freguesias/" | append: page.freguesia_slug | append: "/index.html" %}
+              {% assign freguesia_page = site.pages | where: "path", freguesia_path | first %}
+              {% if freguesia_page and freguesia_page.parties %}
+                <!-- Create a temporary page variable with parties data for the include -->
+                {% assign temp_page = page %}
+                {% assign page = freguesia_page %}
+                {% include parties.html %}
+                {% assign page = temp_page %}
+              {% endif %}
+            {% elsif page.parties %}
+              <!-- Use page parties if no freguesia_slug specified -->
+              {% include parties.html %}
+            {% endif %}
+          </div>
         </div>
       </nav>
     </header>
