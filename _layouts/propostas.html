@@ -2,9 +2,29 @@
 layout: default
 ---
 
+<!-- Navigation -->
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ site.baseurl }}/">
+                            <i class="bi bi-house-fill"></i> Início
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        Propostas
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid px-0">
     <!-- Header -->
-    <div class="py-4 mb-5">
+    <div class="py-4">
         <div class="container">
             <div class="row">
                 <div class="col">
@@ -16,26 +36,6 @@ layout: default
                         propostas para transformar Arroios" }}
                     </p>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Navigation -->
-    <div class="container mb-4">
-        <div class="row">
-            <div class="col">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item">
-                            <a href="{{ site.baseurl }}/">
-                                <i class="bi bi-house-fill"></i> Início
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            Propostas
-                        </li>
-                    </ol>
-                </nav>
             </div>
         </div>
     </div>
@@ -69,8 +69,100 @@ layout: default
     <!-- Proposals Grid -->
     <div class="container mb-5">
         <div class="row g-4" id="propostasGrid">
-            <!-- Proposals content will be inserted here -->
-            {{ content }}
+            <!-- Automatically generate cards from proposta pages -->
+            {% comment %} Find all pages in freguesias/*/propostas/ directories
+            {% endcomment %} {% assign all_propostas = site.pages | where_exp:
+            "page", "page.path contains 'freguesias/' and page.path contains
+            '/propostas/' and page.path !=
+            'freguesias/arroios/propostas/index.md' and page.path !=
+            'freguesias/alvalade/propostas/index.md'" %} {% comment %} Filter by
+            freguesia if specified {% endcomment %} {% if page.freguesia %} {%
+            assign filtered_propostas = all_propostas | where_exp: "item",
+            "item.path contains page.freguesia" %} {% else %} {% assign
+            filtered_propostas = all_propostas %} {% endif %} {% for proposta in
+            filtered_propostas %}
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 shadow-sm proposta-card">
+                    {% if proposta.gx_media_links %} {% assign images =
+                    proposta.gx_media_links | split: ' ' %} {% if images.size >
+                    0 %}
+                    <img
+                        src="{{ site.baseurl }}{{ images[0] }}"
+                        class="card-img-top"
+                        alt="{{ proposta.proposta | default: proposta.title }}"
+                        style="height: 200px; object-fit: cover"
+                    />
+                    {% else %}
+                    <div
+                        class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                        style="height: 200px"
+                    >
+                        <i
+                            class="bi bi-lightbulb text-muted"
+                            style="font-size: 3rem"
+                        ></i>
+                    </div>
+                    {% endif %} {% else %}
+                    <div
+                        class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                        style="height: 200px"
+                    >
+                        <i
+                            class="bi bi-lightbulb text-muted"
+                            style="font-size: 3rem"
+                        ></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title" href="{{ proposta.url }}">
+                            {{ proposta.proposta | default: proposta.title }}
+                        </h5>
+                        {% if proposta.sumario %} {% assign truncated_desc =
+                        proposta.sumario %} {% if proposta.sumario.size > 150 %}
+                        {% assign truncated_desc = proposta.sumario | slice: 0,
+                        147 | append: "..." %} {% endif %}
+                        <p class="card-text">{{ truncated_desc }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div
+                            class="d-flex justify-content-between align-items-center"
+                        >
+                            <a
+                                href="{{ proposta.url }}"
+                                class="btn btn-primary btn-sm"
+                            >
+                                Ver Detalhes
+                            </a>
+                            <small class="text-muted">
+                                <i class="bi bi-geo-alt"></i>
+                                {% if proposta.geometry.type == "Point" %}
+                                Localização {% elsif proposta.geometry.type ==
+                                "Polygon" %} Área {% else %} {{
+                                proposta.geometry.type | default: "Localização"
+                                }} {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Fallback content if no propostas found -->
+            {% if filtered_propostas.size == 0 %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i
+                        class="bi bi-lightbulb text-muted"
+                        style="font-size: 3rem"
+                    ></i>
+                    <h3 class="text-muted mt-3">Nenhuma proposta disponível</h3>
+                    <p class="text-muted">
+                        As propostas serão adicionadas em breve
+                    </p>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <!-- No results message -->

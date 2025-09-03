@@ -184,6 +184,9 @@ class GoogleMyMapsDownloader
       slug = properties["slug"].to_s.strip
       page_path = "freguesias/#{freguesia_slug}/propostas/#{slug}.md"
 
+      # Create directory if it doesn't exist
+      FileUtils.mkdir_p(File.dirname(page_path))
+
       # Skip if page already exists
       if File.exist?(page_path)
         log "Page already exists: #{page_path}"
@@ -284,7 +287,7 @@ class GoogleMyMapsDownloader
   end
 
   def generate_index_content(features)
-    content = <<~FRONTMATTER
+    <<~FRONTMATTER
       ---
       layout: propostas
       title: "Todas as Propostas"
@@ -292,68 +295,6 @@ class GoogleMyMapsDownloader
       ---
 
     FRONTMATTER
-
-    # Add each proposal card
-    features.each do |feature|
-      content += generate_proposal_card_html(feature)
-    end
-
-    content
-  end
-
-  def generate_proposal_card_html(feature)
-    properties = feature["properties"]
-    geometry = feature["geometry"]
-
-    proposta = escape_html(properties["proposta"] || "Proposta")
-    description = escape_html(properties["descricao"] || "")
-    slug = properties["slug"]
-
-    # Handle images
-    has_images = properties["gx_media_links"] && !properties["gx_media_links"].to_s.strip.empty?
-    first_image = has_images ? properties["gx_media_links"].split(" ").first : nil
-
-    # Truncate description
-    truncated_description = (description.length > 150) ? description[0..147] + "..." : description
-
-    # Determine geometry type display
-    geometry_text = case geometry["type"]
-    when "Point"
-      "Localização"
-    when "Polygon"
-      "Área"
-    else
-      geometry["type"]
-    end
-
-    <<~HTML
-      <div class="col-lg-4 col-md-6">
-        <div class="card h-100 shadow-sm proposta-card">
-          #{if first_image
-              %(<img src="{{ site.baseurl }}/#{first_image}" class="card-img-top" alt="#{proposta}" style="height: 200px; object-fit: cover;">)
-            else
-              %(<div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-              <i class="bi bi-lightbulb text-muted" style="font-size: 3rem;"></i>
-            </div>)
-            end}
-          <div class="card-body">
-            <h5 class="card-title">#{proposta}</h5>
-            #{truncated_description.empty? ? "" : %(<p class="card-text">#{truncated_description}</p>)}
-          </div>
-          <div class="card-footer bg-transparent">
-            <div class="d-flex justify-content-between align-items-center">
-              <a href="{{ site.baseurl }}/freguesias/#{freguesia_slug}/propostas/#{slug}" class="btn btn-primary btn-sm">
-                Ver Detalhes
-              </a>
-              <small class="text-muted">
-                <i class="bi bi-geo-alt"></i>
-                #{geometry_text}
-              </small>
-            </div>
-          </div>
-        </div>
-      </div>
-    HTML
   end
 
   def escape_html(text)
