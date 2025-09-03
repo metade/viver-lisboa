@@ -80,6 +80,59 @@ body.map-page {
     }
 }
 
+/* CTA Overlay (Desktop) */
+.cta-overlay {
+    position: absolute;
+    bottom: 40px;
+    right: 10px;
+    z-index: 1000;
+    max-width: 380px;
+    backdrop-filter: blur(10px);
+    animation: slideInUp 0.6s ease-out;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.cta-overlay .btn {
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.cta-overlay .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* CTA Footer (Mobile) */
+.cta-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    animation: slideInUp 0.6s ease-out;
+}
+
+.cta-footer .btn {
+    transition: all 0.2s ease;
+}
+
+.cta-footer .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Slide in animation for CTA elements */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .map-overlay {
@@ -91,5 +144,10 @@ body.map-page {
 
     #detailsPanel {
         --bs-offcanvas-width: 100vw;
+    }
+
+    /* Adjust map height to accommodate mobile footer */
+    body.map-page #map {
+        padding-bottom: 80px;
     }
 }

@@ -90,6 +90,31 @@
           </div>
       </div>
 
+      <!-- CTA Overlay (Desktop) / Footer (Mobile) -->
+      {%- if page.submit_propostas_url -%}
+      <div class="cta-overlay bg-accent text-white shadow-lg rounded-3 p-3 d-none d-md-block">
+        <div class="text-center">
+          <h5 class="h6 fw-bold mb-1">Tens uma ideia?</h5>
+          <p class="small mb-3 opacity-75">Sugere as tuas propostas para {{ page.freguesia }}</p>
+          <a href="{{ page.submit_propostas_url }}" target="_blank" class="btn btn-light btn-sm fw-semibold text-dark">
+            <i class="bi bi-plus-circle me-1"></i>
+            Sugere as tuas propostas
+          </a>
+        </div>
+      </div>
+
+      <!-- Mobile Footer CTA -->
+      <div class="cta-footer bg-accent text-white p-3 d-md-none">
+        <div class="text-center">
+          <h6 class="fw-bold mb-2">Tens uma ideia para {{ page.freguesia }}?</h6>
+          <a href="{{ page.submit_propostas_url }}" target="_blank" class="btn btn-light fw-semibold text-dark w-100">
+            <i class="bi bi-plus-circle me-2"></i>
+            Sugere as tuas propostas
+          </a>
+        </div>
+      </div>
+      {%- endif -%}
+
       <!-- Side Panel -->
       <div class="offcanvas offcanvas-end" tabindex="-1" id="detailsPanel" aria-labelledby="detailsPanelLabel">
         <div class="offcanvas-header bg-light border-bottom">
