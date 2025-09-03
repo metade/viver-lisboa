@@ -4,6 +4,7 @@ source "https://rubygems.org"
 gem "jekyll", "~> 4.4.1"
 gem "logger"
 gem "http", "~> 5.0"
+gem "activesupport"
 
 # Jekyll plugins
 group :jekyll_plugins do

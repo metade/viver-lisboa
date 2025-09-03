@@ -5,6 +5,7 @@ require "json"
 require "uri"
 require "digest"
 require "fileutils"
+require "active_support/inflector"
 
 class GoogleMyMapsDownloader
   attr_reader :valid_features, :maps_id, :freguesia_slug, :output_file
@@ -212,6 +213,7 @@ class GoogleMyMapsDownloader
     # Start with basic front matter
     front_matter = "---\n"
     front_matter += "layout: proposta\n"
+    front_matter += "freguesia: #{freguesia}\n"
     front_matter += "freguesia_slug: #{freguesia_slug}\n"
     front_matter += "slug: #{properties["slug"]}\n"
 
@@ -263,6 +265,7 @@ class GoogleMyMapsDownloader
     index_content = <<~FRONTMATTER
       ---
       layout: propostas
+      freguesia: #{freguesia}
       freguesia_slug: #{freguesia_slug}
       title: "Todas as Propostas"
       description: "Explore todas as propostas da coligação Viver Arroios para as Eleições Autárquicas 2025"
@@ -456,5 +459,9 @@ class GoogleMyMapsDownloader
     else
       "#{(bytes / (1024.0 * 1024)).round(1)} MB"
     end
+  end
+
+  def freguesia
+    freguesia_slug.humanize
   end
 end
