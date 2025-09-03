@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
       source: "pmtiles-source",
       "source-layer": "border",
       paint: {
-        "line-color": "#A9A9A9",
+        "line-color": "#3dadbc",
         "line-width": 3,
         "line-opacity": 0.8,
       },

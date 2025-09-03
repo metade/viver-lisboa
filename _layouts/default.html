@@ -11,29 +11,42 @@
     {%- endif -%}
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ '/assets/css/theme.css' | asset_url }}">
-
-
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="{{ '/assets/css/main.css' | asset_url }}">
   </head>
 
   <body>
     <header>
-      <div class="container">
-        <div class="site-header d-flex justify-content-between align-items-center">
-          <h1 class="site-title">
-            <a href="{{ '/' | relative_url }}">{{ site.title }}</a>
-          </h1>
-          <nav>
-            <ul>
-              <li><a href="{{ '/' | relative_url }}">Home</a></li>
-              <li><a href="{{ '/about' | relative_url }}">About</a></li>
-            </ul>
-          </nav>
+      <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
+        <div class="container">
+          <a class="navbar-brand fw-bold" href="{{ '/' | relative_url }}">
+              <h1 class="mb-0">
+                {% if page.freguesia %}
+                    <em>Viver</em>{{ page.freguesia }}
+                {% else %}
+                    <em>Viver</em> Lisboa
+                {% endif %}
+              </h1>
+          </a>
+
+          {% if false %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ '/' | relative_url }}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ '/about' | relative_url }}">About</a>
+                </li>
+                </ul>
+            </div>
+          {% endif %}
         </div>
-      </div>
+      </nav>
     </header>
 
     <main>
