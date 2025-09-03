@@ -76,9 +76,9 @@ layout: default
             '/propostas/' and page.path !=
             'freguesias/arroios/propostas/index.md' and page.path !=
             'freguesias/alvalade/propostas/index.md'" %} {% comment %} Filter by
-            freguesia if specified {% endcomment %} {% if page.freguesia %} {%
-            assign filtered_propostas = all_propostas | where_exp: "item",
-            "item.path contains page.freguesia" %} {% else %} {% assign
+            freguesia if specified {% endcomment %} {% if page.freguesia_slug %}
+            {% assign filtered_propostas = all_propostas | where_exp: "item",
+            "item.path contains page.freguesia_slug" %} {% else %} {% assign
             filtered_propostas = all_propostas %} {% endif %} {% for proposta in
             filtered_propostas %}
             <div class="col-lg-4 col-md-6">

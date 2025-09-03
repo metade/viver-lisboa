@@ -110,6 +110,35 @@ strong,
     --bs-btn-active-border-color: #bf3343;
 }
 
+/* Outline button in teal */
+.btn-outline-primary {
+    --bs-btn-color: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-primary);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-active-bg: var(--bs-primary);
+    --bs-btn-active-border-color: var(--bs-primary);
+    --bs-btn-disabled-color: var(--bs-primary);
+    --bs-btn-disabled-border-color: var(--bs-primary);
+}
+
+/* Breadcrumb links in teal */
+.breadcrumb .breadcrumb-item a {
+    color: var(--bs-primary) !important;
+    text-decoration: none;
+}
+
+.breadcrumb .breadcrumb-item a:hover,
+.breadcrumb .breadcrumb-item a:focus {
+    color: #2f8e9a !important; /* slightly darker teal on hover */
+    text-decoration: underline;
+}
+
+/* Optional: active breadcrumb (current page) also teal instead of gray */
+.breadcrumb .breadcrumb-item.active {
+    color: var(--bs-breadcrumb-item-active-color) !important;
+}
+
 /* 5) Badges, alerts, links (quick theming) */
 .badge.bg-primary {
     background-color: var(--brand-teal) !important;

@@ -212,6 +212,7 @@ class GoogleMyMapsDownloader
     # Start with basic front matter
     front_matter = "---\n"
     front_matter += "layout: proposta\n"
+    front_matter += "freguesia_slug: #{freguesia_slug}\n"
     front_matter += "slug: #{properties["slug"]}\n"
 
     # Add all properties as front matter variables
@@ -256,45 +257,21 @@ class GoogleMyMapsDownloader
   end
 
   def generate_propostas_index
-    log "Generating propostas index page..."
-
-    # Get all features with slugs
-    features_with_slugs = @valid_features.select do |feature|
-      properties = feature["properties"]
-      properties && properties["slug"] && !properties["slug"].to_s.strip.empty?
-    end
-
-    if features_with_slugs.empty?
-      log "No features with slugs found, skipping index generation"
-      return
-    end
-
-    # Deduplicate by slug - keep first occurrence of each slug
-    unique_features = {}
-    features_with_slugs.each do |feature|
-      slug = feature["properties"]["slug"]
-      unique_features[slug] ||= feature
-    end
-
-    unique_features_array = unique_features.values
+    log "Generating #{freguesia_slug} propostas index page..."
 
     # Generate the index page content
-    index_content = generate_index_content(unique_features_array)
-
-    # Write the index page
-    File.write("freguesias/#{freguesia_slug}/propostas/index.md", index_content)
-    log "Generated propostas index page with #{unique_features_array.length} unique proposals (#{features_with_slugs.length} total features)"
-  end
-
-  def generate_index_content(features)
-    <<~FRONTMATTER
+    index_content = <<~FRONTMATTER
       ---
       layout: propostas
+      freguesia_slug: #{freguesia_slug}
       title: "Todas as Propostas"
       description: "Explore todas as propostas da coligação Viver Arroios para as Eleições Autárquicas 2025"
       ---
 
     FRONTMATTER
+
+    # Write the index page
+    File.write("freguesias/#{freguesia_slug}/propostas/index.md", index_content)
   end
 
   def escape_html(text)
