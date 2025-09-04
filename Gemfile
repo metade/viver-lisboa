@@ -5,6 +5,7 @@ gem "jekyll", "~> 4.4.1"
 gem "logger"
 gem "http", "~> 5.0"
 gem "activesupport"
+gem "nokogiri", "~> 1.15"
 
 # Jekyll plugins
 group :jekyll_plugins do

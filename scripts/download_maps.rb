@@ -18,6 +18,7 @@ class GoogleMyMapsDownloader
     @kml_data = nil
     @geojson_data = nil
     @valid_features = []
+    @non_geo_features = []
     @downloaded_images = {}
     @images_dir = "assets/data/images"
   end
@@ -27,6 +28,7 @@ class GoogleMyMapsDownloader
     download_kml
     convert_to_geojson
     filter_features
+    extract_non_geo_features
     tidy_up_features
     download_images
     generate_jekyll_pages
@@ -105,9 +107,14 @@ class GoogleMyMapsDownloader
   def convert_to_geojson
     log "Converting KML to GeoJSON using ogr2ogr..."
 
-    conversion_success = system("ogr2ogr -f GeoJSON tmp/temp_data.geojson tmp/raw_data.kml 2>/dev/null")
+    # Use -skipfailures to handle multiple layers gracefully
+    # This allows ogr2ogr to skip layers that can't be converted instead of failing entirely
+    conversion_success = system("ogr2ogr -f GeoJSON -skipfailures tmp/temp_data.geojson tmp/raw_data.kml 2>/dev/null")
 
     unless conversion_success && File.exist?("tmp/temp_data.geojson")
+      # If it still fails, try without error suppression to see what's wrong
+      log "Conversion failed, retrying without error suppression for debugging..."
+      system("ogr2ogr -f GeoJSON -skipfailures tmp/temp_data.geojson tmp/raw_data.kml")
       raise "Failed to convert KML to GeoJSON. This might happen if the KML file is empty/corrupted or there are GDAL version compatibility issues."
     end
 
@@ -125,12 +132,100 @@ class GoogleMyMapsDownloader
     log "Filtered #{@geojson_data["features"].length} features down to #{@valid_features.length} valid features"
   end
 
+  def extract_non_geo_features
+    log "Extracting proposals without locations from KML..."
+
+    # Parse the KML to find features in "Propostas s/ Local" folder
+    require "nokogiri"
+
+    begin
+      doc = Nokogiri::XML(@kml_data)
+      doc.remove_namespaces!
+
+      # Find the "Propostas s/ Local" folder
+      folders = doc.xpath("//Folder")
+      non_geo_folder = folders.find { |folder| folder.xpath("name").text.include?("Propostas s/ Local") }
+
+      if non_geo_folder
+        placemarks = non_geo_folder.xpath(".//Placemark")
+        log "Found #{placemarks.length} proposals without locations"
+
+        placemarks.each do |placemark|
+          feature = extract_feature_from_placemark(placemark)
+          @non_geo_features << feature if feature
+        end
+
+        log "Extracted #{@non_geo_features.length} non-geographical proposals"
+      else
+        log "No 'Propostas s/ Local' folder found"
+      end
+    rescue => e
+      log "Error parsing KML for non-geographical features: #{e.message}"
+    end
+  end
+
+  def extract_feature_from_placemark(placemark)
+    name = placemark.xpath("name").text.strip
+    description = placemark.xpath("description").text
+
+    # Parse the description to extract structured data
+    properties = {"name" => name}
+
+    # Extract key-value pairs from CDATA description
+    if description.include?("<br>")
+      description.scan(/([^<:]+):\s*([^<]+)(?:<br>|$)/) do |key, value|
+        clean_key = key.strip.downcase
+        clean_value = value.strip
+
+        # Handle coordinates specially
+        if clean_key == "coordenadas"
+          coords = clean_value.split(",").map(&:strip).map(&:to_f)
+          if coords.length >= 2
+            properties["coordinates"] = coords
+          end
+        else
+          properties[clean_key] = clean_value
+        end
+      end
+    end
+
+    # Also check ExtendedData elements
+    placemark.xpath(".//Data").each do |data|
+      name_attr = data.attribute("name")&.value
+      value_elem = data.xpath("value").text
+
+      if name_attr && !value_elem.empty?
+        properties[name_attr.downcase] = value_elem.strip
+      end
+    end
+
+    # Create a pseudo-GeoJSON feature (without geometry for non-geo features)
+    {
+      "type" => "Feature",
+      "properties" => properties,
+      "geometry" => nil
+    }
+  rescue => e
+    log "Error extracting feature from placemark: #{e.message}"
+    nil
+  end
+
   def tidy_up_features
     @valid_features.map! do |feature|
       feature["properties"].transform_keys!(&:downcase)
 
       feature["properties"] = feature["properties"].slice(
         "slug", "name", "proposta", "sumario", "descricao", "eixo", "gx_media_links"
+      )
+      feature
+    end
+
+    # Also tidy up non-geographical features
+    @non_geo_features.map! do |feature|
+      feature["properties"].transform_keys!(&:downcase)
+
+      feature["properties"] = feature["properties"].slice(
+        "slug", "name", "proposta", "sumario", "descricao", "eixo", "coordinates"
       )
       feature
     end
@@ -178,35 +273,45 @@ class GoogleMyMapsDownloader
 
     generated_count = 0
 
+    # Process geographical features
     @valid_features.each do |feature|
-      properties = feature["properties"]
-      next unless properties && properties["slug"] && !properties["slug"].to_s.strip.empty?
-
-      slug = properties["slug"].to_s.strip
-      page_path = "freguesias/#{freguesia_slug}/propostas/#{slug}.md"
-
-      # Create directory if it doesn't exist
-      FileUtils.mkdir_p(File.dirname(page_path))
-
-      # Skip if page already exists
-      if File.exist?(page_path)
-        log "Page already exists: #{page_path}"
-        next
-      end
-
-      # Generate front matter
-      front_matter = generate_front_matter(feature)
-
-      # Write the page
-      File.write(page_path, front_matter)
-      log "Generated page: #{page_path}"
-      generated_count += 1
+      generated_count += 1 if generate_page_for_feature(feature, true)
     end
 
-    log "Generated #{generated_count} Jekyll pages"
+    # Process non-geographical features
+    @non_geo_features.each do |feature|
+      generated_count += 1 if generate_page_for_feature(feature, false)
+    end
+
+    log "Generated #{generated_count} Jekyll pages total"
   end
 
-  def generate_front_matter(feature)
+  def generate_page_for_feature(feature, has_geometry)
+    properties = feature["properties"]
+    return false unless properties && properties["slug"] && !properties["slug"].to_s.strip.empty?
+
+    slug = properties["slug"].to_s.strip
+    page_path = "freguesias/#{freguesia_slug}/propostas/#{slug}.md"
+
+    # Create directory if it doesn't exist
+    FileUtils.mkdir_p(File.dirname(page_path))
+
+    # Skip if page already exists
+    if File.exist?(page_path)
+      log "Page already exists: #{page_path}"
+      return false
+    end
+
+    # Generate front matter
+    front_matter = generate_front_matter(feature, has_geometry)
+
+    # Write the page
+    File.write(page_path, front_matter)
+    log "Generated page: #{page_path} (#{has_geometry ? "with" : "without"} map location)"
+    true
+  end
+
+  def generate_front_matter(feature, has_geometry = true)
     properties = feature["properties"]
     geometry = feature["geometry"]
 
@@ -216,11 +321,12 @@ class GoogleMyMapsDownloader
     front_matter += "freguesia: #{freguesia}\n"
     front_matter += "freguesia_slug: #{freguesia_slug}\n"
     front_matter += "slug: #{properties["slug"]}\n"
+    front_matter += "has_map_location: #{has_geometry}\n"
 
     # Add all properties as front matter variables
     properties.each do |key, value|
       next if key == "slug" # Already added
-      next if ["description", "tessellate", "extrude", "visibility"].include?(key) # fields to ignore
+      next if ["description", "tessellate", "extrude", "visibility", "coordinates"].include?(key) # fields to ignore or handle separately
       next if value.nil? || value.to_s.strip.empty?
 
       # Clean the key name
@@ -243,17 +349,23 @@ class GoogleMyMapsDownloader
     end
 
     # Add geometry information
-    if geometry
+    if has_geometry && geometry
       front_matter += "geometry:\n"
       front_matter += "  type: #{geometry["type"]}\n"
       if geometry["coordinates"]
         front_matter += "  coordinates: #{geometry["coordinates"]}\n"
       end
+    elsif !has_geometry && properties["coordinates"]
+      # For non-geo features, add coordinates as reference only
+      front_matter += "reference_coordinates: #{properties["coordinates"]}\n"
     end
 
     front_matter += "---\n\n"
     front_matter += "<!-- This page was automatically generated from Google My Maps data -->\n"
     front_matter += "<!-- To edit this proposal, update the Google My Maps data and re-run the download script -->\n"
+    if !has_geometry
+      front_matter += "<!-- This proposal does not have a specific map location -->\n"
+    end
 
     front_matter
   end
@@ -416,10 +528,11 @@ class GoogleMyMapsDownloader
   end
 
   def cleanup
-    ["tmp/raw_data.kml", "tmp/temp_data.geojson"].each do |file|
+    # Keep raw_data.kml for debugging multi-layer issues
+    ["tmp/temp_data.geojson"].each do |file|
       File.delete(file) if File.exist?(file)
     end
-    log "Cleaned up temporary files"
+    log "Cleaned up temporary files (keeping raw_data.kml for debugging)"
   end
 
   def print_summary
@@ -430,8 +543,10 @@ class GoogleMyMapsDownloader
     puts "   🖼️  Downloaded images: #{@downloaded_images.length}"
 
     # Count generated pages
-    features_with_slugs = @valid_features.count { |f| f["properties"] && f["properties"]["slug"] && !f["properties"]["slug"].to_s.strip.empty? }
-    puts "   📄 Generated pages: #{features_with_slugs}"
+    geo_features_with_slugs = @valid_features.count { |f| f["properties"] && f["properties"]["slug"] && !f["properties"]["slug"].to_s.strip.empty? }
+    non_geo_features_with_slugs = @non_geo_features.count { |f| f["properties"] && f["properties"]["slug"] && !f["properties"]["slug"].to_s.strip.empty? }
+    total_generated_pages = geo_features_with_slugs + non_geo_features_with_slugs
+    puts "   📄 Generated pages: #{total_generated_pages} (#{geo_features_with_slugs} with location, #{non_geo_features_with_slugs} without location)"
 
     puts "   💾 File size: #{format_file_size(file_size)}"
     puts "   📁 Output: #{@output_file}"
@@ -448,6 +563,11 @@ class GoogleMyMapsDownloader
     features_with_images = @valid_features.count { |f| f["properties"] && f["properties"]["gx_media_links"] }
     if features_with_images > 0
       puts "   └─ Features with images: #{features_with_images}"
+    end
+
+    # Show non-geographical features summary
+    if @non_geo_features.length > 0
+      puts "   └─ Non-geographical proposals: #{@non_geo_features.length}"
     end
   end
 
