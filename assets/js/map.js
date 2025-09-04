@@ -103,47 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
-    // Auto-focus map on Freguesia border when data loads
-    map.on("sourcedata", function (e) {
-      if (e.sourceId === "pmtiles-source" && e.isSourceLoaded) {
-        const freguesiaFeatures = map.querySourceFeatures("pmtiles-source", {
-          sourceLayer: "border",
-        });
-
-        if (freguesiaFeatures.length > 0) {
-          // Get freguesia bounds and fit map to them
-          const bounds = new maplibregl.LngLatBounds();
-          freguesiaFeatures[0].geometry.coordinates[0].forEach((coord) => {
-            bounds.extend(coord);
-          });
-
-          // Fit map to freguesia bounds with padding
-          map.fitBounds(bounds, {
-            padding: 50,
-            maxZoom: 15,
-            duration: 1500,
-          });
-        }
-      }
-    });
-
-    // Add propostas layer for point geometries (circles/markers)
-    map.addLayer({
-      id: "propostas-markers",
-      type: "circle",
-      source: "pmtiles-source",
-      "source-layer": "propostas",
-      filter: ["==", ["geometry-type"], "Point"],
-      paint: {
-        "circle-radius": 8,
-        "circle-color": "#3b82f6",
-        "circle-stroke-color": "#ffffff",
-        "circle-stroke-width": 2,
-        "circle-opacity": 0.8,
-      },
-    });
-
-    // Add propostas layer for polygon geometries (fill)
+    // Add propostas layer for polygon geometries (fill) - render first so markers appear on top
     map.addLayer({
       id: "propostas-polygons-fill",
       type: "fill",
@@ -168,6 +128,46 @@ document.addEventListener("DOMContentLoaded", function () {
         "line-width": 2,
         "line-opacity": 0.8,
       },
+    });
+
+    // Add propostas layer for point geometries (circles/markers) - render last so they appear on top
+    map.addLayer({
+      id: "propostas-markers",
+      type: "circle",
+      source: "pmtiles-source",
+      "source-layer": "propostas",
+      filter: ["==", ["geometry-type"], "Point"],
+      paint: {
+        "circle-radius": 8,
+        "circle-color": "#3b82f6",
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 2,
+        "circle-opacity": 0.8,
+      },
+    });
+
+    // Auto-focus map on Freguesia border when data loads
+    map.on("sourcedata", function (e) {
+      if (e.sourceId === "pmtiles-source" && e.isSourceLoaded) {
+        const freguesiaFeatures = map.querySourceFeatures("pmtiles-source", {
+          sourceLayer: "border",
+        });
+
+        if (freguesiaFeatures.length > 0) {
+          // Get freguesia bounds and fit map to them
+          const bounds = new maplibregl.LngLatBounds();
+          freguesiaFeatures[0].geometry.coordinates[0].forEach((coord) => {
+            bounds.extend(coord);
+          });
+
+          // Fit map to freguesia bounds with padding
+          map.fitBounds(bounds, {
+            padding: 50,
+            maxZoom: 15,
+            duration: 1500,
+          });
+        }
+      }
     });
 
     // Add hover effect for markers
@@ -332,34 +332,45 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Function to set up click handlers (called after layers are loaded)
   function setupClickHandlers() {
-    // Add click handler for propostas markers
-    map.on("click", "propostas-markers", function (e) {
-      const properties = e.features[0].properties;
+    // Add single map click handler that prioritizes markers over polygons
+    map.on("click", function (e) {
+      // Query all features at the click point
+      const markerFeatures = map.queryRenderedFeatures(e.point, {
+        layers: ["propostas-markers"],
+      });
 
-      // Remove previous selection styling
-      removeSelectionStyling();
+      const polygonFeatures = map.queryRenderedFeatures(e.point, {
+        layers: ["propostas-polygons-fill"],
+      });
 
-      // Highlight selected marker
-      highlightMarker(e.features[0]);
+      // Prioritize markers over polygons
+      if (markerFeatures.length > 0) {
+        // Handle marker click
+        const properties = markerFeatures[0].properties;
 
-      // Create panel content and show panel
-      const panelContent = createPanelContent(properties);
-      showPanelWithContent(panelContent);
-    });
+        // Remove previous selection styling
+        removeSelectionStyling();
 
-    // Add click handler for propostas polygons
-    map.on("click", "propostas-polygons-fill", function (e) {
-      const properties = e.features[0].properties;
+        // Highlight selected marker
+        highlightMarker(markerFeatures[0]);
 
-      // Remove previous selection styling
-      removeSelectionStyling();
+        // Create panel content and show panel
+        const panelContent = createPanelContent(properties);
+        showPanelWithContent(panelContent);
+      } else if (polygonFeatures.length > 0) {
+        // Handle polygon click (only if no markers are present)
+        const properties = polygonFeatures[0].properties;
 
-      // Highlight selected polygon
-      highlightPolygon(e.features[0]);
+        // Remove previous selection styling
+        removeSelectionStyling();
 
-      // Create panel content and show panel
-      const panelContent = createPanelContent(properties);
-      showPanelWithContent(panelContent);
+        // Highlight selected polygon
+        highlightPolygon(polygonFeatures[0]);
+
+        // Create panel content and show panel
+        const panelContent = createPanelContent(properties);
+        showPanelWithContent(panelContent);
+      }
     });
   }
 
