@@ -279,3 +279,34 @@ strong,
         height: 24px;
     }
 }
+
+/* Eixo color-coded badges */
+.badge-eixo-1 {
+    background-color: var(--brand-red) !important;
+    color: white !important;
+}
+
+.badge-eixo-2 {
+    background-color: var(--brand-yellow) !important;
+    color: white !important;
+}
+
+.badge-eixo-3 {
+    background-color: var(--brand-green) !important;
+    color: white !important;
+}
+
+.badge-eixo-4 {
+    background-color: var(--brand-purple) !important;
+    color: white !important;
+}
+
+.badge-eixo-5 {
+    background-color: var(--brand-slate) !important;
+    color: white !important;
+}
+
+.badge-eixo-overflow {
+    background-color: #000000 !important;
+    color: white !important;
+}

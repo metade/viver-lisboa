@@ -1,5 +1,114 @@
 // Map initialization and configuration
 document.addEventListener("DOMContentLoaded", function () {
+  // Global variable to store eixo color mapping
+  let eixoColorMapping = {};
+
+  // Colors for eixo property (in order) - matching theme.css brand colors
+  const eixoColors = [
+    "#ed4154", // --brand-red
+    "#ffb91b", // --brand-yellow
+    "#66bc3d", // --brand-green
+    "#7a3dbc", // --brand-purple
+    "#4b5d73", // --brand-slate
+  ];
+
+  // Function to create eixo color mapping based on alphabetical order
+  function createEixoColorMapping(features) {
+    const uniqueEixos = new Set();
+
+    // Collect all unique eixo values from features
+    features.forEach((feature) => {
+      if (feature.properties && feature.properties.eixo) {
+        uniqueEixos.add(feature.properties.eixo);
+      }
+    });
+
+    // Sort alphabetically and assign colors
+    const sortedEixos = Array.from(uniqueEixos).sort();
+    sortedEixos.forEach((eixo, index) => {
+      if (index < eixoColors.length) {
+        eixoColorMapping[eixo] = {
+          color: eixoColors[index],
+          classIndex: index + 1,
+        };
+      } else {
+        // Fallback for more than 5 eixo values - use overflow badge
+        console.warn(
+          `⚠️ Eixo overflow: "${eixo}" (position ${index + 1}) using black badge. Consider adding more colors.`,
+        );
+        eixoColorMapping[eixo] = {
+          color: "#000000",
+          classIndex: "overflow",
+        };
+      }
+    });
+
+    console.log("Eixo color mapping created:", eixoColorMapping);
+    console.log("Found eixo values:", sortedEixos);
+    console.log("Color assignments:");
+    sortedEixos.forEach((eixo, index) => {
+      if (index < eixoColors.length) {
+        console.log(
+          `  ${eixo}: ${eixoColors[index]} (badge-eixo-${index + 1})`,
+        );
+      }
+    });
+  }
+
+  // Function to get eixo badge class
+  function getEixoBadgeClass(eixo) {
+    if (eixoColorMapping[eixo]) {
+      return `badge-eixo-${eixoColorMapping[eixo].classIndex}`;
+    }
+    return "badge-primary"; // fallback
+  }
+
+  // Function to create MapLibre color expression based on eixo values
+  function createEixoColorExpression() {
+    const expression = ["case"];
+
+    // Add each eixo value and its color to the expression
+    Object.keys(eixoColorMapping).forEach((eixo) => {
+      expression.push(["==", ["get", "eixo"], eixo]);
+      expression.push(eixoColorMapping[eixo].color);
+    });
+
+    // Default fallback color
+    expression.push("#3b82f6");
+
+    return expression;
+  }
+
+  // Function to update map layer colors based on eixo mapping
+  function updateLayerColorsWithEixo() {
+    if (Object.keys(eixoColorMapping).length === 0) {
+      return; // No eixo mapping yet
+    }
+
+    const colorExpression = createEixoColorExpression();
+
+    // Update polygon fill color (with lower opacity for better marker visibility)
+    map.setPaintProperty(
+      "propostas-polygons-fill",
+      "fill-color",
+      colorExpression,
+    );
+    map.setPaintProperty("propostas-polygons-fill", "fill-opacity", 0.25);
+
+    // Update polygon outline color
+    map.setPaintProperty(
+      "propostas-polygons-outline",
+      "line-color",
+      colorExpression,
+    );
+    map.setPaintProperty("propostas-polygons-outline", "line-opacity", 0.8);
+
+    // Update marker color
+    map.setPaintProperty("propostas-markers", "circle-color", colorExpression);
+    map.setPaintProperty("propostas-markers", "circle-opacity", 0.9);
+
+    console.log("Updated map layer colors with eixo-based styling");
+  }
   // Initialize panel content from page templates
   initializePanelContent();
   // Add PMTiles protocol
@@ -112,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
       filter: ["==", ["geometry-type"], "Polygon"],
       paint: {
         "fill-color": "#3b82f6",
-        "fill-opacity": 0.4,
+        "fill-opacity": 0.3,
       },
     });
 
@@ -126,7 +235,7 @@ document.addEventListener("DOMContentLoaded", function () {
       paint: {
         "line-color": "#3b82f6",
         "line-width": 2,
-        "line-opacity": 0.8,
+        "line-opacity": 0.9,
       },
     });
 
@@ -142,13 +251,44 @@ document.addEventListener("DOMContentLoaded", function () {
         "circle-color": "#3b82f6",
         "circle-stroke-color": "#ffffff",
         "circle-stroke-width": 2,
-        "circle-opacity": 0.8,
+        "circle-opacity": 0.9,
       },
+    });
+
+    // Add hover effects for markers
+    map.on("mouseenter", "propostas-markers", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+
+    map.on("mouseleave", "propostas-markers", () => {
+      map.getCanvas().style.cursor = "";
+    });
+
+    // Add hover effects for polygons
+    map.on("mouseenter", "propostas-polygons-fill", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+
+    map.on("mouseleave", "propostas-polygons-fill", () => {
+      map.getCanvas().style.cursor = "";
     });
 
     // Auto-focus map on Freguesia border when data loads
     map.on("sourcedata", function (e) {
       if (e.sourceId === "pmtiles-source" && e.isSourceLoaded) {
+        // Create eixo color mapping from propostas features
+        const propostasFeatures = map.querySourceFeatures("pmtiles-source", {
+          sourceLayer: "propostas",
+        });
+        console.log("Found", propostasFeatures.length, "propostas features");
+        createEixoColorMapping(propostasFeatures);
+
+        // Update map layer colors with eixo-based styling
+        updateLayerColorsWithEixo();
+
+        // Add eixo legend to info panel
+        addEixoLegendToInfoPanel();
+
         const freguesiaFeatures = map.querySourceFeatures("pmtiles-source", {
           sourceLayer: "border",
         });
@@ -224,10 +364,10 @@ document.addEventListener("DOMContentLoaded", function () {
       source: "propostas-markers-selected",
       paint: {
         "circle-radius": 12,
-        "circle-color": "#dc3545",
-        "circle-stroke-color": "#ffffff",
-        "circle-stroke-width": 3,
-        "circle-opacity": 0.9,
+        "circle-color": "transparent",
+        "circle-stroke-color": "#000000",
+        "circle-stroke-width": 5,
+        "circle-stroke-opacity": 0.8,
       },
     });
   }
@@ -244,11 +384,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     map.addLayer({
       id: "propostas-polygons-selected",
-      type: "fill",
+      type: "line",
       source: "propostas-polygons-selected",
       paint: {
-        "fill-color": "#dc3545",
-        "fill-opacity": 0.6,
+        "line-color": "#000000",
+        "line-width": 5,
+        "line-opacity": 0.8,
+        "line-dasharray": [2, 2],
       },
     });
   }
@@ -274,10 +416,52 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Add eixo badge if it exists (for polygons)
     if (properties["eixo"]) {
-      panelContent += `<p><span class="badge badge-primary">${properties["eixo"]}</span></p>`;
+      const badgeClass = getEixoBadgeClass(properties["eixo"]);
+      panelContent += `<p><span class="badge ${badgeClass}">${properties["eixo"]}</span></p>`;
     }
 
     return addCommonPanelElements(panelContent, properties);
+  }
+
+  // Function to add eixo legend to the general info panel
+  function addEixoLegendToInfoPanel() {
+    const infoPanel = document.getElementById("generalInfoContent");
+    if (!infoPanel || Object.keys(eixoColorMapping).length === 0) {
+      return;
+    }
+
+    // Create legend HTML
+    let legendHTML = `
+      <div class="mb-3 pb-2 border-bottom">
+        <div class="fw-semibold text-body-secondary small text-uppercase mb-2">
+          Eixos
+        </div>
+        <div class="text-dark">
+    `;
+
+    // Sort eixos alphabetically for display
+    const sortedEixos = Object.keys(eixoColorMapping).sort();
+
+    sortedEixos.forEach((eixo) => {
+      const badgeClass = getEixoBadgeClass(eixo);
+      legendHTML += `
+        <div class="d-flex align-items-center mb-1">
+          <span class="badge ${badgeClass} me-2" style="min-width: 20px; font-size: 0.7rem;">&nbsp;</span>
+          <span class="small">${eixo}</span>
+        </div>
+      `;
+    });
+
+    legendHTML += `
+        </div>
+      </div>
+    `;
+
+    // Insert the legend before the last div (navigation section)
+    const lastSection = infoPanel.querySelector(".mb-0");
+    if (lastSection) {
+      lastSection.insertAdjacentHTML("beforebegin", legendHTML);
+    }
   }
 
   // Helper function to add common panel elements (link and images)
