@@ -6,6 +6,7 @@ require "uri"
 require "digest"
 require "fileutils"
 require "active_support/inflector"
+require "yaml"
 
 class GoogleMyMapsDownloader
   attr_reader :valid_features, :page_data, :freguesia_slug, :output_file
@@ -319,13 +320,15 @@ class GoogleMyMapsDownloader
     properties = feature["properties"]
     geometry = feature["geometry"]
 
-    # Start with basic front matter
-    front_matter = "---\n"
-    front_matter += "layout: proposta\n"
-    front_matter += "freguesia: #{freguesia}\n"
-    front_matter += "freguesia_slug: #{freguesia_slug}\n"
-    front_matter += "slug: #{properties["slug"]}\n"
-    front_matter += "has_map_location: #{has_geometry}\n"
+    # Build front matter hash
+    front_matter_hash = {
+      "layout" => "proposta",
+      "freguesia" => freguesia,
+      "freguesia_slug" => freguesia_slug,
+      "slug" => properties["slug"],
+      "has_map_location" => has_geometry,
+      "parties" => page_data["parties"]
+    }
 
     # Add all properties as front matter variables
     properties.each do |key, value|
@@ -337,33 +340,35 @@ class GoogleMyMapsDownloader
       clean_key = key.to_s.gsub(/[^a-zA-Z0-9_]/, "_").downcase
 
       # Handle different value types
-      if value.to_s.include?("\n")
-        # Multi-line content
-        front_matter += "#{clean_key}: |\n"
-        value.to_s.each_line do |line|
-          front_matter += "  #{line}"
-        end
+      front_matter_hash[clean_key] = if value.to_s.include?("\n")
+        # Multi-line content - YAML will handle this automatically
+        value.to_s
       elsif value.to_s.match?(/^https?:\/\//) || value.to_s.start_with?("./")
-        # URLs or file paths - quote them
-        front_matter += "#{clean_key}: \"#{value.to_s.gsub('"', '\"')}\"\n"
+        # URLs or file paths
+        value.to_s
       else
         # Regular content
-        front_matter += "#{clean_key}: #{value}\n"
+        value
       end
     end
+
+    front_matter_hash["proposta"] ||= front_matter_hash["name"]
 
     # Add geometry information
     if has_geometry && geometry
-      front_matter += "geometry:\n"
-      front_matter += "  type: #{geometry["type"]}\n"
+      front_matter_hash["geometry"] = {
+        "type" => geometry["type"]
+      }
       if geometry["coordinates"]
-        front_matter += "  coordinates: #{geometry["coordinates"]}\n"
+        front_matter_hash["geometry"]["coordinates"] = geometry["coordinates"]
       end
     elsif !has_geometry && properties["coordinates"]
       # For non-geo features, add coordinates as reference only
-      front_matter += "reference_coordinates: #{properties["coordinates"]}\n"
+      front_matter_hash["reference_coordinates"] = properties["coordinates"]
     end
 
+    # Convert to YAML and build final front matter
+    front_matter = front_matter_hash.to_yaml
     front_matter += "---\n\n"
     front_matter += "<!-- This page was automatically generated from Google My Maps data -->\n"
     front_matter += "<!-- To edit this proposal, update the Google My Maps data and re-run the download script -->\n"

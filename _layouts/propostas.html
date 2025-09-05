@@ -165,7 +165,7 @@ layout: default
                         {% endif %}
                         <div class="card-body">
                             <h5 class="card-title" href="{{ proposta.url }}">
-                                {{ proposta.proposta | default: proposta.title
+                                {{ proposta.proposta | default: proposta.name
                                 }}
                             </h5>
                             {% if proposta.sumario %} {% assign truncated_desc =
