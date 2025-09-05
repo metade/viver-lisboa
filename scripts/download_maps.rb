@@ -7,9 +7,15 @@ require "digest"
 require "fileutils"
 require "active_support/inflector"
 require "yaml"
+require "mini_magick"
 
 class GoogleMyMapsDownloader
   attr_reader :valid_features, :page_data, :freguesia_slug, :output_file
+
+  # Image processing configuration
+  MAX_IMAGE_WIDTH = 1200
+  MAX_IMAGE_HEIGHT = 800
+  JPEG_QUALITY = 85
 
   def initialize(page_data:, freguesia_slug:, verbose: false)
     @verbose = verbose
@@ -252,7 +258,7 @@ class GoogleMyMapsDownloader
       urls = media_links.split(/[\s,]+/).reject(&:empty?)
       downloaded_urls = []
       urls.each do |url|
-        local_path = download_single_image(url, index)
+        local_path = download_single_image(url)
         if local_path
           downloaded_urls << local_path
           image_count += 1
@@ -406,13 +412,13 @@ class GoogleMyMapsDownloader
     text.to_s.gsub("&", "&amp;").gsub("<", "&lt;").gsub(">", "&gt;").gsub('"', "&quot;").gsub("'", "&#39;")
   end
 
-  def download_single_image(url, feature_index)
+  def download_single_image(url)
     return nil unless url.match?(/^https?:\/\//)
 
-    # Create a unique filename based on URL hash and feature index
+    # Create a unique filename based on URL hash
     url_hash = Digest::MD5.hexdigest(url)[0..8]
     extension = extract_file_extension(url)
-    filename = "#{freguesia_slug}_#{feature_index}_#{url_hash}#{extension}"
+    filename = "#{freguesia_slug}_#{url_hash}#{extension}"
     local_path = File.join(@images_dir, filename)
     image_url_path = "/#{local_path}"
 
@@ -421,11 +427,19 @@ class GoogleMyMapsDownloader
       return @downloaded_images[url]
     end
 
-    # Skip if file already exists
+    # Skip if file already exists (check both original extension and .jpg)
+    jpeg_filename = filename.gsub(/\.\w+$/, ".jpg")
+    jpeg_local_path = File.join(@images_dir, jpeg_filename)
+    jpeg_image_url_path = "/#{jpeg_local_path}"
+
     if File.exist?(local_path)
       log "Image already exists: #{filename}"
       @downloaded_images[url] = image_url_path
       return image_url_path
+    elsif File.exist?(jpeg_local_path)
+      log "Image already exists (as JPEG): #{jpeg_filename}"
+      @downloaded_images[url] = jpeg_image_url_path
+      return jpeg_image_url_path
     end
 
     log "Downloading image: #{url} -> #{filename}"
@@ -445,12 +459,59 @@ class GoogleMyMapsDownloader
         log "Warning: #{url} doesn't appear to be an image (Content-Type: #{content_type})"
       end
 
-      # Convert response body to string for file writing
+      # Write original image to temporary file
+      temp_path = "#{local_path}.tmp"
       body_content = response.body.to_s
-      File.write(local_path, body_content)
-      @downloaded_images[url] = image_url_path
-      log "Successfully downloaded: #{filename} (#{format_file_size(body_content.length)})"
-      image_url_path
+      File.write(temp_path, body_content)
+
+      # Process image for web optimization
+      begin
+        image = MiniMagick::Image.open(temp_path)
+        original_size = image.size
+
+        # Resize if too large
+        if image.width > MAX_IMAGE_WIDTH || image.height > MAX_IMAGE_HEIGHT
+          image.resize "#{MAX_IMAGE_WIDTH}x#{MAX_IMAGE_HEIGHT}>"
+          log "Resized image from #{original_size[0]}x#{original_size[1]} to #{image.width}x#{image.height}"
+        end
+
+        # Set quality for JPEG compression
+        image.quality JPEG_QUALITY
+
+        # Convert to JPEG if it's not already (for better compression)
+        if image.type != "JPEG"
+          # Update filename extension to .jpg
+          new_filename = filename.gsub(/\.\w+$/, ".jpg")
+          new_local_path = File.join(@images_dir, new_filename)
+          new_image_url_path = "/#{new_local_path}"
+
+          image.format "jpeg"
+          image.write(new_local_path)
+
+          # Clean up temp file
+          File.delete(temp_path) if File.exist?(temp_path)
+
+          @downloaded_images[url] = new_image_url_path
+          log "Successfully processed and converted: #{new_filename} (#{format_file_size(File.size(new_local_path))})"
+          new_image_url_path
+        else
+          image.write(local_path)
+
+          # Clean up temp file
+          File.delete(temp_path) if File.exist?(temp_path)
+
+          @downloaded_images[url] = image_url_path
+          log "Successfully processed: #{filename} (#{format_file_size(File.size(local_path))})"
+          image_url_path
+        end
+      rescue MiniMagick::Error => e
+        log "Failed to process image #{filename}: #{e.message}. Saving original."
+        # Fallback: save original if processing fails
+        File.rename(temp_path, local_path) if File.exist?(temp_path)
+        @downloaded_images[url] = image_url_path
+        log "Successfully downloaded (unprocessed): #{filename} (#{format_file_size(body_content.length)})"
+        image_url_path
+      end
     else
       log "Failed to download #{url}: HTTP #{response.code}"
       nil

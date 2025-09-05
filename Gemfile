@@ -6,6 +6,7 @@ gem "logger"
 gem "http", "~> 5.0"
 gem "activesupport"
 gem "nokogiri", "~> 1.15"
+gem "mini_magick", "~> 4.12"
 
 # Jekyll plugins
 group :jekyll_plugins do

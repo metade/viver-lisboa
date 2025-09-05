@@ -17,7 +17,7 @@ jobs:
       - name: Install geospatial dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y tippecanoe gdal-bin libproj-dev libgeos-dev
+          sudo apt-get install -y tippecanoe gdal-bin libproj-dev libgeos-dev imagemagick
 
       # --- Ruby/Jekyll build ---
       - name: Set up Ruby
