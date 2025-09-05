@@ -186,15 +186,6 @@ layout: default
                                     Ver Detalhes
                                 </a>
                                 <div class="d-flex flex-column align-items-end">
-                                    <small class="text-muted">
-                                        <i class="bi bi-geo-alt"></i>
-                                        {% if proposta.geometry.type == "Point"
-                                        %} Localização {% elsif
-                                        proposta.geometry.type == "Polygon" %}
-                                        Área {% else %} {{
-                                        proposta.geometry.type | default:
-                                        "Localização" }} {% endif %}
-                                    </small>
                                     {% if proposta.eixo %}
                                     <small
                                         class="eixo-badge mt-1"
