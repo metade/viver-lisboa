@@ -34,7 +34,7 @@ task freguesias: ["tmp"] do
 
     downloader = GoogleMyMapsDownloader.new(
       freguesia_slug: freguesia_slug,
-      maps_id: page.data["my_google_map_id"],
+      page_data: page.data,
       verbose: true
     )
     downloader.download_and_process

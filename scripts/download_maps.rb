@@ -8,13 +8,13 @@ require "fileutils"
 require "active_support/inflector"
 
 class GoogleMyMapsDownloader
-  attr_reader :valid_features, :maps_id, :freguesia_slug, :output_file
+  attr_reader :valid_features, :page_data, :freguesia_slug, :output_file
 
-  def initialize(maps_id:, freguesia_slug:, verbose: false)
+  def initialize(page_data:, freguesia_slug:, verbose: false)
     @verbose = verbose
     @freguesia_slug = freguesia_slug
     @output_file = "tmp/#{freguesia_slug}/propostas.geojson"
-    @maps_id = maps_id
+    @page_data = page_data
     @kml_data = nil
     @geojson_data = nil
     @valid_features = []
@@ -44,8 +44,12 @@ class GoogleMyMapsDownloader
     puts message if @verbose
   end
 
+  def my_google_maps_id
+    page_data["my_google_map_id"]
+  end
+
   def validate_requirements
-    if @maps_id.nil? || @maps_id.empty?
+    if my_google_maps_id.nil? || my_google_maps_id.empty?
       raise "Google My Maps ID is required"
     end
 
@@ -72,7 +76,7 @@ class GoogleMyMapsDownloader
   end
 
   def download_kml
-    url = "https://www.google.com/maps/d/kml?mid=#{@maps_id}&forcekml=1"
+    url = "https://www.google.com/maps/d/kml?mid=#{my_google_maps_id}&forcekml=1"
     log "Downloading KML from: #{url}"
 
     begin
@@ -374,13 +378,16 @@ class GoogleMyMapsDownloader
     log "Generating #{freguesia_slug} propostas index page..."
 
     # Generate the index page content
+    front_matter = {
+      "layout" => "propostas",
+      "freguesia_slug" => freguesia_slug,
+      "freguesia" => page_data["freguesia"],
+      "parties" => page_data["parties"],
+      "title" => "Todas as Propostas",
+      "description" => "Explore todas as propostas da coligação Viver #{freguesia} para as Eleições Autárquicas 2025"
+    }
     index_content = <<~FRONTMATTER
-      ---
-      layout: propostas
-      freguesia: #{freguesia}
-      freguesia_slug: #{freguesia_slug}
-      title: "Todas as Propostas"
-      description: "Explore todas as propostas da coligação Viver Arroios para as Eleições Autárquicas 2025"
+      #{front_matter.to_yaml}
       ---
 
     FRONTMATTER
@@ -471,7 +478,7 @@ class GoogleMyMapsDownloader
     # Create the final GeoJSON structure
     final_geojson = {
       "type" => "FeatureCollection",
-      "name" => "#{@freguesia_slug.capitalize} Layer (#{@maps_id})",
+      "name" => "#{@freguesia_slug.capitalize} Layer (#{my_google_maps_id})",
       "crs" => {
         "type" => "name",
         "properties" => {
@@ -538,7 +545,7 @@ class GoogleMyMapsDownloader
   def print_summary
     file_size = File.size(@output_file)
     puts "✅ Successfully processed Google My Maps data!"
-    puts "   📍 Map ID: #{@maps_id}"
+    puts "   📍 Map ID: #{my_google_maps_id}"
     puts "   📊 Valid features: #{@valid_features.length}"
     puts "   🖼️  Downloaded images: #{@downloaded_images.length}"
 

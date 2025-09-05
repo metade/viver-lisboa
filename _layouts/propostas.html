@@ -122,303 +122,333 @@ layout: default
                     />
                     {% else %}
                     <div
-                        class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                        class="card-img-top bg-primary d-flex flex-column align-items-center justify-content-center text-white"
                         style="height: 200px"
                     >
-                        <i
-                            class="bi bi-lightbulb text-muted"
-                            style="font-size: 3rem"
-                        ></i>
+                        <div class="text-center">
+                            <h4 class="mb-1 text-uppercase">
+                                <em>Viver</em> Lisboa
+                            </h4>
+                            <div class="h5 mb-3">
+                                {% assign path_parts = proposta.path | split:
+                                '/' %} {% for part in path_parts %} {% if part
+                                == 'freguesias' %} {% assign next_index =
+                                forloop.index %} {% break %} {% endif %} {%
+                                endfor %} {% if next_index and
+                                path_parts[next_index] %} {% assign
+                                freguesia_slug = path_parts[next_index] %} {% if
+                                freguesia_slug == 'arroios' %}Arroios{% elsif
+                                freguesia_slug == 'alvalade' %}Alvalade{% else
+                                %}{{ freguesia_slug | capitalize }}{% endif %}
+                                {% else %}Lisboa{% endif %}
+                            </div>
+                            <div class="d-flex justify-content-center gap-1">
+                                {% include card-parties.html parties=page.parties %}
+                            </div>
+                        </div>
                     </div>
                     {% endif %} {% else %}
                     <div
-                        class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                        class="card-img-top bg-primary d-flex flex-column align-items-center justify-content-center text-white"
                         style="height: 200px"
                     >
-                        <i
-                            class="bi bi-lightbulb text-muted"
-                            style="font-size: 3rem"
-                        ></i>
+                        <div class="text-center">
+                            <h4 class="mb-1 text-uppercase"><em>Viver</em> Lisboa</h4>
+                            <div class="h5 mb-3">
+                                {{ page.freguesia }}
+                            </div>
+                            <div class="d-flex justify-content-center gap-1">
+                                {% include card-parties.html parties=page.parties %}
+                            </div>
+                        </div>
                     </div>
-                    {% endif %}
-                    <div class="card-body">
-                        <h5 class="card-title" href="{{ proposta.url }}">
-                            {{ proposta.proposta | default: proposta.title }}
-                        </h5>
-                        {% if proposta.sumario %} {% assign truncated_desc =
-                        proposta.sumario %} {% if proposta.sumario.size > 150 %}
-                        {% assign truncated_desc = proposta.sumario | slice: 0,
-                        147 | append: "..." %} {% endif %}
-                        <p class="card-text">{{ truncated_desc }}</p>
                         {% endif %}
-                    </div>
-                    <div class="card-footer bg-transparent">
-                        <div
-                            class="d-flex justify-content-between align-items-center"
-                        >
-                            <a
-                                href="{{ proposta.url }}"
-                                class="btn btn-primary btn-sm"
+                        <div class="card-body">
+                            <h5 class="card-title" href="{{ proposta.url }}">
+                                {{ proposta.proposta | default: proposta.title
+                                }}
+                            </h5>
+                            {% if proposta.sumario %} {% assign truncated_desc =
+                            proposta.sumario %} {% if proposta.sumario.size >
+                            150 %} {% assign truncated_desc = proposta.sumario |
+                            slice: 0, 147 | append: "..." %} {% endif %}
+                            <p class="card-text">{{ truncated_desc }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div
+                                class="d-flex justify-content-between align-items-center"
                             >
-                                Ver Detalhes
-                            </a>
-                            <div class="d-flex flex-column align-items-end">
-                                <small class="text-muted">
-                                    <i class="bi bi-geo-alt"></i>
-                                    {% if proposta.geometry.type == "Point" %}
-                                    Localização {% elsif proposta.geometry.type
-                                    == "Polygon" %} Área {% else %} {{
-                                    proposta.geometry.type | default:
-                                    "Localização" }} {% endif %}
-                                </small>
-                                {% if proposta.eixo %}
-                                <small
-                                    class="eixo-badge mt-1"
-                                    data-eixo="{{ proposta.eixo }}"
+                                <a
+                                    href="{{ proposta.url }}"
+                                    class="btn btn-primary btn-sm"
                                 >
-                                    <i class="bi bi-tag-fill me-1"></i>{{
-                                    proposta.eixo }}
-                                </small>
-                                {% endif %}
+                                    Ver Detalhes
+                                </a>
+                                <div class="d-flex flex-column align-items-end">
+                                    <small class="text-muted">
+                                        <i class="bi bi-geo-alt"></i>
+                                        {% if proposta.geometry.type == "Point"
+                                        %} Localização {% elsif
+                                        proposta.geometry.type == "Polygon" %}
+                                        Área {% else %} {{
+                                        proposta.geometry.type | default:
+                                        "Localização" }} {% endif %}
+                                    </small>
+                                    {% if proposta.eixo %}
+                                    <small
+                                        class="eixo-badge mt-1"
+                                        data-eixo="{{ proposta.eixo }}"
+                                    >
+                                        <i class="bi bi-tag-fill me-1"></i>{{
+                                        proposta.eixo }}
+                                    </small>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
+                {% endfor %}
 
-            <!-- Fallback content if no propostas found -->
-            {% if filtered_propostas.size == 0 %}
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <i
-                        class="bi bi-lightbulb text-muted"
-                        style="font-size: 3rem"
-                    ></i>
-                    <h3 class="text-muted mt-3">Nenhuma proposta disponível</h3>
-                    <p class="text-muted">
-                        As propostas serão adicionadas em breve
-                    </p>
+                <!-- Fallback content if no propostas found -->
+                {% if filtered_propostas.size == 0 %}
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i
+                            class="bi bi-lightbulb text-muted"
+                            style="font-size: 3rem"
+                        ></i>
+                        <h3 class="text-muted mt-3">
+                            Nenhuma proposta disponível
+                        </h3>
+                        <p class="text-muted">
+                            As propostas serão adicionadas em breve
+                        </p>
+                    </div>
                 </div>
+                {% endif %}
             </div>
-            {% endif %}
-        </div>
 
-        <!-- No results message -->
-        <div id="noResults" class="text-center py-5" style="display: none">
-            <i class="bi bi-search text-muted" style="font-size: 3rem"></i>
-            <h3 class="text-muted mt-3">Nenhuma proposta encontrada</h3>
-            <p class="text-muted">Tente pesquisar com outros termos</p>
+            <!-- No results message -->
+            <div id="noResults" class="text-center py-5" style="display: none">
+                <i class="bi bi-search text-muted" style="font-size: 3rem"></i>
+                <h3 class="text-muted mt-3">Nenhuma proposta encontrada</h3>
+                <p class="text-muted">Tente pesquisar com outros termos</p>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        setupEixoColors();
-        setupSearch();
-    });
-
-    // Eixo color mapping system
-    let eixoColorMapping = {};
-    const eixoColors = [
-        "#ed4154", // --brand-red
-        "#ffb91b", // --brand-yellow
-        "#66bc3d", // --brand-green
-        "#7a3dbc", // --brand-purple
-        "#4b5d73", // --brand-slate
-    ];
-
-    function setupEixoColors() {
-        // Collect all unique eixo values
-        const uniqueEixos = new Set();
-        document.querySelectorAll("[data-eixo]").forEach((element) => {
-            const eixo = element.getAttribute("data-eixo");
-            if (eixo) {
-                uniqueEixos.add(eixo);
-            }
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            setupEixoColors();
+            setupSearch();
         });
 
-        // Sort alphabetically and assign colors
-        const sortedEixos = Array.from(uniqueEixos).sort();
-        sortedEixos.forEach((eixo, index) => {
-            if (index < eixoColors.length) {
-                eixoColorMapping[eixo] = {
-                    color: eixoColors[index],
-                    classIndex: index + 1,
-                };
-            } else {
-                // Fallback for more than 5 eixo values - use overflow badge
-                console.warn(
-                    `⚠️ Eixo overflow: "${eixo}" (position ${index + 1}) using black badge. Consider adding more colors.`,
-                );
-                eixoColorMapping[eixo] = {
-                    color: "#000000",
-                    classIndex: "overflow",
-                };
-            }
-        });
+        // Eixo color mapping system
+        let eixoColorMapping = {};
+        const eixoColors = [
+            "#ed4154", // --brand-red
+            "#ffb91b", // --brand-yellow
+            "#66bc3d", // --brand-green
+            "#7a3dbc", // --brand-purple
+            "#4b5d73", // --brand-slate
+        ];
 
-        console.log(
-            "Eixo color mapping created for propostas index:",
-            eixoColorMapping,
-        );
+        function setupEixoColors() {
+            // Collect all unique eixo values
+            const uniqueEixos = new Set();
+            document.querySelectorAll("[data-eixo]").forEach((element) => {
+                const eixo = element.getAttribute("data-eixo");
+                if (eixo) {
+                    uniqueEixos.add(eixo);
+                }
+            });
 
-        // Apply colors to eixo elements in footer
-        document.querySelectorAll(".eixo-badge").forEach((eixoElement) => {
-            const eixo = eixoElement.getAttribute("data-eixo");
-            if (eixoColorMapping[eixo]) {
-                eixoElement.style.color = "#ffffff";
-                eixoElement.style.backgroundColor =
-                    eixoColorMapping[eixo].color;
-                eixoElement.style.fontWeight = "600";
-                eixoElement.style.padding = "2px 6px";
-                eixoElement.style.borderRadius = "4px";
-                eixoElement.style.fontSize = "0.75rem";
-            } else {
-                eixoElement.style.color = "#ffffff";
-                eixoElement.style.backgroundColor = "#3b82f6"; // fallback blue
-                eixoElement.style.fontWeight = "600";
-                eixoElement.style.padding = "2px 6px";
-                eixoElement.style.borderRadius = "4px";
-                eixoElement.style.fontSize = "0.75rem";
-            }
-        });
+            // Sort alphabetically and assign colors
+            const sortedEixos = Array.from(uniqueEixos).sort();
+            sortedEixos.forEach((eixo, index) => {
+                if (index < eixoColors.length) {
+                    eixoColorMapping[eixo] = {
+                        color: eixoColors[index],
+                        classIndex: index + 1,
+                    };
+                } else {
+                    // Fallback for more than 5 eixo values - use overflow badge
+                    console.warn(
+                        `⚠️ Eixo overflow: "${eixo}" (position ${index + 1}) using black badge. Consider adding more colors.`,
+                    );
+                    eixoColorMapping[eixo] = {
+                        color: "#000000",
+                        classIndex: "overflow",
+                    };
+                }
+            });
 
-        // Create and show legend
-        createEixoLegend();
-    }
+            console.log(
+                "Eixo color mapping created for propostas index:",
+                eixoColorMapping,
+            );
 
-    function createEixoLegend() {
-        const legendContainer = document.getElementById("eixoLegend");
-        const legendWrapper = document.getElementById("eixoLegendContainer");
+            // Apply colors to eixo elements in footer
+            document.querySelectorAll(".eixo-badge").forEach((eixoElement) => {
+                const eixo = eixoElement.getAttribute("data-eixo");
+                if (eixoColorMapping[eixo]) {
+                    eixoElement.style.color = "#ffffff";
+                    eixoElement.style.backgroundColor =
+                        eixoColorMapping[eixo].color;
+                    eixoElement.style.fontWeight = "600";
+                    eixoElement.style.padding = "2px 6px";
+                    eixoElement.style.borderRadius = "4px";
+                    eixoElement.style.fontSize = "0.75rem";
+                } else {
+                    eixoElement.style.color = "#ffffff";
+                    eixoElement.style.backgroundColor = "#3b82f6"; // fallback blue
+                    eixoElement.style.fontWeight = "600";
+                    eixoElement.style.padding = "2px 6px";
+                    eixoElement.style.borderRadius = "4px";
+                    eixoElement.style.fontSize = "0.75rem";
+                }
+            });
 
-        if (Object.keys(eixoColorMapping).length === 0) {
-            return;
+            // Create and show legend
+            createEixoLegend();
         }
 
-        // Sort eixos alphabetically for display
-        const sortedEixos = Object.keys(eixoColorMapping).sort();
+        function createEixoLegend() {
+            const legendContainer = document.getElementById("eixoLegend");
+            const legendWrapper = document.getElementById(
+                "eixoLegendContainer",
+            );
 
-        sortedEixos.forEach((eixo) => {
-            const legendItem = document.createElement("div");
-            legendItem.className = "d-flex align-items-center legend-item";
-            legendItem.style.cursor = "pointer";
-            legendItem.setAttribute("data-eixo-filter", eixo);
-            legendItem.innerHTML = `
+            if (Object.keys(eixoColorMapping).length === 0) {
+                return;
+            }
+
+            // Sort eixos alphabetically for display
+            const sortedEixos = Object.keys(eixoColorMapping).sort();
+
+            sortedEixos.forEach((eixo) => {
+                const legendItem = document.createElement("div");
+                legendItem.className = "d-flex align-items-center legend-item";
+                legendItem.style.cursor = "pointer";
+                legendItem.setAttribute("data-eixo-filter", eixo);
+                legendItem.innerHTML = `
                 <span class="badge badge-eixo-${eixoColorMapping[eixo].classIndex} me-2" style="min-width: 20px; font-size: 0.7rem;">&nbsp;</span>
                 <span class="small">${eixo}</span>
             `;
 
-            // Add click handler for filtering
-            legendItem.addEventListener("click", function () {
-                filterByEixo(eixo);
-                updateLegendSelection(eixo);
+                // Add click handler for filtering
+                legendItem.addEventListener("click", function () {
+                    filterByEixo(eixo);
+                    updateLegendSelection(eixo);
+                });
+
+                legendContainer.appendChild(legendItem);
             });
 
-            legendContainer.appendChild(legendItem);
-        });
+            // Show the legend
+            legendWrapper.style.display = "block";
 
-        // Show the legend
-        legendWrapper.style.display = "block";
+            // Add clear filter handler
+            document
+                .getElementById("clearEixoFilter")
+                .addEventListener("click", function () {
+                    clearEixoFilter();
+                    updateLegendSelection(null);
+                });
+        }
 
-        // Add clear filter handler
-        document
-            .getElementById("clearEixoFilter")
-            .addEventListener("click", function () {
-                clearEixoFilter();
-                updateLegendSelection(null);
+        function setupSearch() {
+            const searchInput = document.getElementById("searchPropostas");
+            searchInput.addEventListener("input", function (e) {
+                filterPropostas(e.target.value.toLowerCase());
             });
-    }
+        }
 
-    function setupSearch() {
-        const searchInput = document.getElementById("searchPropostas");
-        searchInput.addEventListener("input", function (e) {
-            filterPropostas(e.target.value.toLowerCase());
-        });
-    }
+        function filterPropostas(searchTerm) {
+            const cards = document.querySelectorAll(".proposta-card");
+            const noResults = document.getElementById("noResults");
+            let visibleCount = 0;
 
-    function filterPropostas(searchTerm) {
-        const cards = document.querySelectorAll(".proposta-card");
-        const noResults = document.getElementById("noResults");
-        let visibleCount = 0;
+            cards.forEach((card) => {
+                const title = card
+                    .querySelector(".card-title")
+                    .textContent.toLowerCase();
+                const description =
+                    card
+                        .querySelector(".card-text")
+                        ?.textContent.toLowerCase() || "";
+                const eixoElement = card.querySelector(".eixo-badge");
+                const eixo = eixoElement
+                    ? eixoElement.textContent.toLowerCase().replace(/^.*\s/, "")
+                    : "";
 
-        cards.forEach((card) => {
-            const title = card
-                .querySelector(".card-title")
-                .textContent.toLowerCase();
-            const description =
-                card.querySelector(".card-text")?.textContent.toLowerCase() ||
-                "";
-            const eixoElement = card.querySelector(".eixo-badge");
-            const eixo = eixoElement
-                ? eixoElement.textContent.toLowerCase().replace(/^.*\s/, "")
-                : "";
+                if (
+                    title.includes(searchTerm) ||
+                    description.includes(searchTerm) ||
+                    eixo.includes(searchTerm) ||
+                    searchTerm === ""
+                ) {
+                    card.parentElement.style.display = "block";
+                    visibleCount++;
+                } else {
+                    card.parentElement.style.display = "none";
+                }
+            });
 
-            if (
-                title.includes(searchTerm) ||
-                description.includes(searchTerm) ||
-                eixo.includes(searchTerm) ||
-                searchTerm === ""
-            ) {
+            noResults.style.display =
+                visibleCount === 0 && searchTerm !== "" ? "block" : "none";
+        }
+
+        function filterByEixo(selectedEixo) {
+            const cards = document.querySelectorAll(".proposta-card");
+            const noResults = document.getElementById("noResults");
+            let visibleCount = 0;
+
+            cards.forEach((card) => {
+                const eixoElement = card.querySelector(".eixo-badge");
+                const cardEixo = eixoElement
+                    ? eixoElement.getAttribute("data-eixo")
+                    : null;
+
+                if (cardEixo === selectedEixo) {
+                    card.parentElement.style.display = "block";
+                    visibleCount++;
+                } else {
+                    card.parentElement.style.display = "none";
+                }
+            });
+
+            noResults.style.display = visibleCount === 0 ? "block" : "none";
+
+            // Clear search input when filtering by eixo
+            document.getElementById("searchPropostas").value = "";
+        }
+
+        function clearEixoFilter() {
+            const cards = document.querySelectorAll(".proposta-card");
+            cards.forEach((card) => {
                 card.parentElement.style.display = "block";
-                visibleCount++;
-            } else {
-                card.parentElement.style.display = "none";
-            }
-        });
+            });
+            document.getElementById("noResults").style.display = "none";
+        }
 
-        noResults.style.display =
-            visibleCount === 0 && searchTerm !== "" ? "block" : "none";
-    }
-
-    function filterByEixo(selectedEixo) {
-        const cards = document.querySelectorAll(".proposta-card");
-        const noResults = document.getElementById("noResults");
-        let visibleCount = 0;
-
-        cards.forEach((card) => {
-            const eixoElement = card.querySelector(".eixo-badge");
-            const cardEixo = eixoElement
-                ? eixoElement.getAttribute("data-eixo")
-                : null;
-
-            if (cardEixo === selectedEixo) {
-                card.parentElement.style.display = "block";
-                visibleCount++;
-            } else {
-                card.parentElement.style.display = "none";
-            }
-        });
-
-        noResults.style.display = visibleCount === 0 ? "block" : "none";
-
-        // Clear search input when filtering by eixo
-        document.getElementById("searchPropostas").value = "";
-    }
-
-    function clearEixoFilter() {
-        const cards = document.querySelectorAll(".proposta-card");
-        cards.forEach((card) => {
-            card.parentElement.style.display = "block";
-        });
-        document.getElementById("noResults").style.display = "none";
-    }
-
-    function updateLegendSelection(selectedEixo) {
-        const legendItems = document.querySelectorAll(".legend-item");
-        legendItems.forEach((item) => {
-            if (
-                selectedEixo &&
-                item.getAttribute("data-eixo-filter") === selectedEixo
-            ) {
-                item.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
-                item.style.borderRadius = "0.375rem";
-                item.style.padding = "0.25rem 0.5rem";
-            } else {
-                item.style.backgroundColor = "transparent";
-                item.style.padding = "0";
-            }
-        });
-    }
-</script>
+        function updateLegendSelection(selectedEixo) {
+            const legendItems = document.querySelectorAll(".legend-item");
+            legendItems.forEach((item) => {
+                if (
+                    selectedEixo &&
+                    item.getAttribute("data-eixo-filter") === selectedEixo
+                ) {
+                    item.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
+                    item.style.borderRadius = "0.375rem";
+                    item.style.padding = "0.25rem 0.5rem";
+                } else {
+                    item.style.backgroundColor = "transparent";
+                    item.style.padding = "0";
+                }
+            });
+        }
+    </script>
+</div>
