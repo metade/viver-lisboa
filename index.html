@@ -10,84 +10,80 @@ title: Viver Lisboa
                 <em>Viver</em> Lisboa
             </h1>
             <p class="lead text-muted mb-5">
-                Explore as propostas da coligação Viver Lisboa para cada freguesia.
-                Clique numa freguesia para ver as propostas específicas da sua área.
+                Explore as propostas da coligação Viver Lisboa para cada
+                freguesia. Clique numa freguesia para ver as propostas
+                específicas da sua área.
             </p>
         </div>
     </div>
 
     <div class="row g-4">
-        {% comment %}
-        Collect all freguesia pages by looking for pages in the freguesias directory
-        {% endcomment %}
-        {% assign freguesias = site.pages | where_exp: "page", "page.path contains 'freguesias/'" | where_exp: "page", "page.name == 'index.html'" | sort: "freguesia" %}
-
-        {% for freguesia_page in freguesias %}
+        {% comment %} Collect all freguesia pages by looking for pages in the
+        freguesias directory {% endcomment %} {% assign freguesias = site.pages
+        | where_exp: "page", "page.path contains 'freguesias/'" | where_exp:
+        "page", "page.name == 'index.html'" | sort: "freguesia" %} {% for
+        freguesia_page in freguesias %}
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100 shadow-sm border-0 position-relative overflow-hidden">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center border-0">
+            <div
+                class="card h-100 shadow-sm border-0 position-relative overflow-hidden"
+            >
+                <div
+                    class="card-header bg-primary text-white d-flex justify-content-between align-items-center border-0"
+                >
                     <h5 class="card-title mb-0 fw-bold">
-                        {{ freguesia_page.freguesia | default: freguesia_page.title }}
+                        {{ freguesia_page.freguesia | default:
+                        freguesia_page.title }}
                     </h5>
-                    {% comment %}
-                    Show parties in header using the parties include if available
-                    {% endcomment %}
-                    {% if freguesia_page.parties and freguesia_page.parties.size > 0 %}
-                        {% comment %}
-                        Temporarily assign freguesia_page to page variable for the include
-                        {% endcomment %}
-                        {% assign temp_page = page %}
-                        {% assign page = freguesia_page %}
-                        <div class="d-flex gap-2">
-                            {% include parties.html %}
-                        </div>
-                        {% assign page = temp_page %}
-                    {% endif %}
+                    {% comment %} Show parties in header using the parties
+                    include if available {% endcomment %} {% if
+                    freguesia_page.parties and freguesia_page.parties.size > 0
+                    %} {% comment %} Temporarily assign freguesia_page to page
+                    variable for the include {% endcomment %} {% assign
+                    temp_page = page %} {% assign page = freguesia_page %}
+                    <div class="d-flex gap-2">{% include parties.html %}</div>
+                    {% assign page = temp_page %} {% endif %}
                 </div>
                 <div class="card-body d-flex flex-column">
-                    {% comment %}
-                    Extract a brief description from the content if available
-                    {% endcomment %}
-                    {% if freguesia_page.content contains 'text-dark' %}
-                        {% assign content_parts = freguesia_page.content | split: '<p class="text-dark">' %}
-                        {% if content_parts.size > 1 %}
-                            {% assign desc_part = content_parts[1] | split: '</p>' | first %}
-                            {% assign description = desc_part | strip_html | strip | truncate: 180 %}
-                            {% if description != "" %}
-                                <p class="card-text text-muted">{{ description }}</p>
-                            {% endif %}
-                        {% endif %}
-                    {% endif %}
-
-                    {% comment %}
-                    Fallback description if no specific content found
-                    {% endcomment %}
-                    {% unless freguesia_page.content contains 'text-dark' %}
-                        <p class="card-text text-muted">
-                            Explore as propostas da coligação Viver {{ freguesia_page.freguesia }}
-                            para melhorar a qualidade de vida na sua freguesia.
-                        </p>
+                    {% comment %} Extract a brief description from the content
+                    if available {% endcomment %} {% if freguesia_page.content
+                    contains 'text-dark' %} {% assign content_parts =
+                    freguesia_page.content | split: '
+                    <p class="text-dark">
+                        ' %} {% if content_parts.size > 1 %} {% assign desc_part
+                        = content_parts[1] | split: '
+                    </p>
+                    ' | first %} {% assign description = desc_part | strip_html
+                    | strip | truncate: 180 %} {% if description != "" %}
+                    <p class="card-text text-muted">{{ description }}</p>
+                    {% endif %} {% endif %} {% endif %} {% comment %} Fallback
+                    description if no specific content found {% endcomment %} {%
+                    unless freguesia_page.content contains 'text-dark' %}
+                    <p class="card-text text-muted">
+                        Explore as propostas da coligação Viver {{
+                        freguesia_page.freguesia }} para melhorar a qualidade de
+                        vida na sua freguesia.
+                    </p>
                     {% endunless %}
                 </div>
                 <div class="card-footer bg-transparent border-0 pt-0">
-                    <a href="{{ freguesia_page.url | relative_url }}" class="btn btn-primary btn-sm w-100">
+                    <a
+                        href="{{ freguesia_page.freguesia_slug | freguesia_relative_url }}"
+                        class="btn btn-primary btn-sm w-100"
+                    >
                         <i class="bi bi-map me-1"></i>
                         Ver Propostas
                     </a>
                 </div>
             </div>
         </div>
-        {% endfor %}
-
-        {% comment %}
-        Show a message if no freguesias are found
-        {% endcomment %}
-        {% if freguesias.size == 0 %}
+        {% endfor %} {% comment %} Show a message if no freguesias are found {%
+        endcomment %} {% if freguesias.size == 0 %}
         <div class="col-12">
             <div class="text-center py-5">
                 <h3 class="text-muted">Nenhuma freguesia encontrada</h3>
                 <p class="text-muted">
-                    As freguesias serão exibidas aqui quando estiverem disponíveis.
+                    As freguesias serão exibidas aqui quando estiverem
+                    disponíveis.
                 </p>
             </div>
         </div>
@@ -95,9 +91,7 @@ title: Viver Lisboa
     </div>
 </div>
 
-{% comment %}
-Minimal custom styles for party logos only
-{% endcomment %}
+{% comment %} Minimal custom styles for party logos only {% endcomment %}
 <style>
     /* Party logo sizing for card headers */
     .card-header .party-logo {
