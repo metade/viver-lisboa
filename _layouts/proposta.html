@@ -12,18 +12,18 @@ layout: default
                         <ol class="breadcrumb mb-0 bg-transparent">
                             <li class="breadcrumb-item">
                                 <a
-                                    href="{{ site.baseurl }}/"
+                                    href="{{ page.freguesia_slug | freguesia_relative_url }}"
                                     class="text-white-50"
                                 >
-                                    <i class="bi bi-house-fill"></i> Início
+                                    <i class="bi bi-map-fill"></i> Mapa
                                 </a>
                             </li>
                             <li class="breadcrumb-item">
                                 <a
-                                    href="{{ site.baseurl }}/#map"
+                                    href="{{ page.freguesia_slug | freguesia_propostas_url }}"
                                     class="text-white-50"
                                 >
-                                    <i class="bi bi-map-fill"></i> Mapa
+                                    <i class="bi bi-list-ul"></i> Propostas
                                 </a>
                             </li>
                             <li
@@ -100,7 +100,7 @@ layout: default
                 <!-- Action buttons -->
                 <div class="d-flex flex-wrap gap-3 mb-5">
                     <a
-                        href="{{ site.baseurl }}/#map"
+                        href="{{ page.freguesia_slug | freguesia_relative_url }}"
                         class="btn btn-primary btn-lg"
                     >
                         <i class="bi bi-map-fill me-2"></i>
