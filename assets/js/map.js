@@ -470,7 +470,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (properties["slug"] && properties["slug"].trim() !== "") {
       panelContent += `
         <div class="mt-3 mb-3">
-          <a href="./propostas/${properties["slug"]}" class="btn btn-primary btn-sm">
+          <a href="./propostas/${properties["slug"]}/" class="btn btn-primary btn-sm">
             <i class="bi bi-arrow-right-circle-fill me-2"></i>
             Ver Proposta Completa
           </a>
