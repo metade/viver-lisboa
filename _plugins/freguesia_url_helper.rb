@@ -31,7 +31,7 @@ module Jekyll
     def freguesia_propostas_url(freguesia_slug)
       if Jekyll.env == "production"
         # Production: subdomain, so just /propostas
-        "/propostas"
+        "/propostas/"
       else
         # Development: subfolder URLs
         site = @context.registers[:site]
