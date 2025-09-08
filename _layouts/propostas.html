@@ -9,7 +9,7 @@ layout: default
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a href="{{ site.baseurl }}/">
+                        <a href="{% if page.freguesia_slug %}{{ '' | main_site_url }}{% else %}{{ site.baseurl }}/{% endif %}">
                             <i class="bi bi-house-fill"></i> Início
                         </a>
                     </li>
@@ -74,7 +74,7 @@ layout: default
             <div class="col">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <a
-                        href="{{ site.baseurl }}/#map"
+                        href="{% if page.freguesia_slug %}{{ page.freguesia_slug | freguesia_relative_url }}{% else %}{{ site.baseurl }}/#map{% endif %}"
                         class="btn btn-outline-primary"
                     >
                         <i class="bi bi-map-fill me-2"></i>
@@ -164,7 +164,7 @@ layout: default
                     </div>
                         {% endif %}
                         <div class="card-body">
-                            <h5 class="card-title" href="{{ proposta.url }}">
+                            <h5 class="card-title">
                                 {{ proposta.proposta | default: proposta.name
                                 }}
                             </h5>
@@ -180,7 +180,7 @@ layout: default
                                 class="d-flex justify-content-between align-items-center"
                             >
                                 <a
-                                    href="{{ proposta.url }}"
+                                    href="{{ proposta | freguesia_proposta_url }}"
                                     class="btn btn-primary btn-sm"
                                 >
                                     Ver Detalhes

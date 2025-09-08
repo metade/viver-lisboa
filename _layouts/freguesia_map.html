@@ -52,7 +52,7 @@
                   <i class="bi bi-info-circle me-2"></i>Mais Informações
               </button>
               <a
-                  href="{{ page.url | append: 'propostas' | relative_url }}"
+                  href="{{ page.freguesia_slug | freguesia_propostas_url }}"
                   class="btn btn-link text-white btn-sm fw-medium"
               >
                   Propostas

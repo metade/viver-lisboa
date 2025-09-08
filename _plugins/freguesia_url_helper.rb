@@ -27,6 +27,35 @@ module Jekyll
       end
     end
 
+    # Generate URL for propostas page within a freguesia context
+    def freguesia_propostas_url(freguesia_slug)
+      if Jekyll.env == "production"
+        # Production: subdomain, so just /propostas
+        "/propostas"
+      else
+        # Development: subfolder URLs
+        site = @context.registers[:site]
+        baseurl = site.config["baseurl"] || ""
+        "#{baseurl}/freguesias/#{freguesia_slug}/propostas"
+      end
+    end
+
+    # Generate URL for individual proposta detail pages
+    def freguesia_proposta_url(proposta_page)
+      # Handle both Page objects and Hash objects from page iteration
+      proposta_url = proposta_page.respond_to?(:url) ? proposta_page.url : proposta_page["url"]
+
+      if Jekyll.env == "production"
+        # Production: subdomain, so use relative path from freguesia root
+        proposta_url.gsub(%r{^/freguesias/[^/]+}, "")
+      else
+        # Development: use full path
+        site = @context.registers[:site]
+        baseurl = site.config["baseurl"] || ""
+        "#{baseurl}#{proposta_url}"
+      end
+    end
+
     # Generate URL for main site (useful when linking back from freguesia pages)
     def main_site_url(path = "")
       if Jekyll.env == "production"
