@@ -44,26 +44,11 @@ title: Viver Lisboa
                     {% assign page = temp_page %} {% endif %}
                 </div>
                 <div class="card-body d-flex flex-column">
-                    {% comment %} Extract a brief description from the content
-                    if available {% endcomment %} {% if freguesia_page.content
-                    contains 'text-dark' %} {% assign content_parts =
-                    freguesia_page.content | split: '
-                    <p class="text-dark">
-                        ' %} {% if content_parts.size > 1 %} {% assign desc_part
-                        = content_parts[1] | split: '
-                    </p>
-                    ' | first %} {% assign description = desc_part | strip_html
-                    | strip | truncate: 180 %} {% if description != "" %}
-                    <p class="card-text text-muted">{{ description }}</p>
-                    {% endif %} {% endif %} {% endif %} {% comment %} Fallback
-                    description if no specific content found {% endcomment %} {%
-                    unless freguesia_page.content contains 'text-dark' %}
                     <p class="card-text text-muted">
-                        Explore as propostas da coligação Viver {{
+                        Explore as propostas da coligação Viver Lisboa - {{
                         freguesia_page.freguesia }} para melhorar a qualidade de
                         vida na sua freguesia.
                     </p>
-                    {% endunless %}
                 </div>
                 <div class="card-footer bg-transparent border-0 pt-0">
                     <a
