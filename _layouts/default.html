@@ -19,7 +19,7 @@
     <header>
       <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
         <div class="container">
-          <a class="navbar-brand fw-bold" href="{% if page.freguesia_slug %}{{ '' | main_site_url }}{% else %}{{ '/' | relative_url }}{% endif %}">
+          <a class="navbar-brand fw-bold" href="{% if page.freguesia_slug %}{{ page.freguesia_slug | freguesia_relative_url }}{% else %}{{ '/' | relative_url }}{% endif %}">
               <h1 class="mb-0">
                 {% if page.freguesia %}
                     <small class="d-block h6 mb-0"><em>Viver</em> Lisboa</small>
