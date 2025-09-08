@@ -23,7 +23,8 @@
     <script>
       window.pageData = {
         freguesiaSlug: {{ page.freguesia_slug | jsonify }},
-        pmtilesUrl: {{ '/assets/data/' | append: page.freguesia_slug | append: '.pmtiles' | asset_url | jsonify }}
+        pmtilesUrl: {{ '/assets/data/' | append: page.freguesia_slug | append: '.pmtiles' | asset_url | jsonify }},
+        mapCenter: {{ page.map_center | default: '[-9.13628, 38.72614]' | jsonify }}
       };
     </script>
   </head>

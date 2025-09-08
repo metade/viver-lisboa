@@ -16,7 +16,7 @@ plugins:
   - jekyll-seo-tag
 
 # Collections
-collections:
+# collections:
 
 # Defaults
 defaults:

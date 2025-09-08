@@ -1,4 +1,7 @@
 // Map initialization and configuration
+// Map center coordinates are now dynamically loaded from each freguesia's front matter
+// instead of being hardcoded for Arroios. Each freguesia page defines its own map_center
+// coordinates as an array [lng, lat] in the front matter, which are passed through pageData.
 document.addEventListener("DOMContentLoaded", function () {
   // Global variable to store eixo color mapping
   let eixoColorMapping = {};
@@ -144,7 +147,10 @@ document.addEventListener("DOMContentLoaded", function () {
         },
       ],
     },
-    center: [-9.13628, 38.72614], // Arroios center coordinates
+    center:
+      window.pageData && window.pageData.mapCenter
+        ? window.pageData.mapCenter
+        : [-9.13628, 38.72614], // Dynamic center coordinates from page data with Arroios fallback
     zoom: 14,
   });
 
@@ -187,9 +193,9 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Optional: Add click event listener
-  map.on("click", function (e) {
-    console.log("Map clicked at:", e.lngLat);
-  });
+  // map.on("click", function (e) {
+  //   console.log("Map clicked at:", e.lngLat);
+  // });
 
   // Function to load propostas layer from PMTiles
   function loadPropostasLayer() {
@@ -296,6 +302,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (freguesiaFeatures.length > 0) {
           // Get freguesia bounds and fit map to them
           const bounds = new maplibregl.LngLatBounds();
+          console.log(bounds);
           freguesiaFeatures[0].geometry.coordinates[0].forEach((coord) => {
             bounds.extend(coord);
           });
