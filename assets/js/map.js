@@ -2,9 +2,16 @@
 // Map center coordinates are now dynamically loaded from each freguesia's front matter
 // instead of being hardcoded for Arroios. Each freguesia page defines its own map_center
 // coordinates as an array [lng, lat] in the front matter, which are passed through pageData.
+//
+// The automatic bounds fitting combines ALL border features from the PMTiles source since
+// complex freguesia geometries can be split across multiple vector tiles. This ensures
+// proper zoom level regardless of how the geometry is tiled in the PMTiles data.
 document.addEventListener("DOMContentLoaded", function () {
   // Global variable to store eixo color mapping
   let eixoColorMapping = {};
+
+  // Flag to prevent multiple initialization
+  let isDataInitialized = false;
 
   // Colors for eixo property (in order) - matching theme.css brand colors
   const eixoColors = [
@@ -281,7 +288,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Auto-focus map on Freguesia border when data loads
     map.on("sourcedata", function (e) {
-      if (e.sourceId === "pmtiles-source" && e.isSourceLoaded) {
+      if (
+        e.sourceId === "pmtiles-source" &&
+        e.isSourceLoaded &&
+        !isDataInitialized
+      ) {
+        isDataInitialized = true;
+
         // Create eixo color mapping from propostas features
         const propostasFeatures = map.querySourceFeatures("pmtiles-source", {
           sourceLayer: "propostas",
@@ -299,20 +312,79 @@ document.addEventListener("DOMContentLoaded", function () {
           sourceLayer: "border",
         });
 
+        console.log(
+          `Found ${freguesiaFeatures.length} border features for ${window.pageData?.freguesiaSlug}`,
+        );
+
         if (freguesiaFeatures.length > 0) {
-          // Get freguesia bounds and fit map to them
+          // Combine all border features into one bounds calculation
+          // Get freguesia bounds from ALL border features
           const bounds = new maplibregl.LngLatBounds();
-          console.log(bounds);
-          freguesiaFeatures[0].geometry.coordinates[0].forEach((coord) => {
-            bounds.extend(coord);
+
+          freguesiaFeatures.forEach((feature) => {
+            const geometry = feature.geometry;
+
+            if (geometry.type === "Polygon") {
+              // For Polygon, coordinates[0] is the outer ring
+              geometry.coordinates[0].forEach((coord) => {
+                bounds.extend(coord);
+              });
+            } else if (geometry.type === "MultiPolygon") {
+              // For MultiPolygon, iterate through all polygons
+              geometry.coordinates.forEach((polygon) => {
+                // For each polygon, use the outer ring (polygon[0])
+                polygon[0].forEach((coord) => {
+                  bounds.extend(coord);
+                });
+              });
+            }
           });
 
-          // Fit map to freguesia bounds with padding
-          map.fitBounds(bounds, {
+          // Get the center of the calculated bounds
+          const boundsCenter = bounds.getCenter();
+          const intendedCenter =
+            window.pageData && window.pageData.mapCenter
+              ? window.pageData.mapCenter
+              : [-9.13628, 38.72614];
+
+          // Always try to fit bounds, but adjust parameters based on freguesia
+          const freguesiaSlug = window.pageData?.freguesiaSlug || "unknown";
+
+          console.log(`Freguesia: ${freguesiaSlug}`);
+          console.log(
+            `Intended center: [${intendedCenter[0]}, ${intendedCenter[1]}]`,
+          );
+          console.log(
+            `Bounds center: [${boundsCenter.lng}, ${boundsCenter.lat}]`,
+          );
+          console.log(`Bounds:`, bounds.toArray());
+
+          // Adjust fit bounds parameters based on freguesia
+          let fitOptions = {
             padding: 50,
-            maxZoom: 15,
             duration: 1500,
-          });
+          };
+
+          // Different freguesias may need different zoom constraints
+          switch (freguesiaSlug) {
+            case "arroios":
+              fitOptions.maxZoom = 15;
+              break;
+            case "alvalade":
+              fitOptions.maxZoom = 14;
+              fitOptions.padding = 100;
+              break;
+            case "santo-antonio":
+              fitOptions.maxZoom = 14;
+              fitOptions.padding = 100;
+              break;
+            default:
+              fitOptions.maxZoom = 14;
+              break;
+          }
+
+          console.log(`Applying fitBounds with options:`, fitOptions);
+          map.fitBounds(bounds, fitOptions);
         }
       }
     });
