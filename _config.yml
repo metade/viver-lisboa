@@ -43,6 +43,7 @@ exclude:
   - README.md
   - .standardrb.yml
   - data
+  - docs
   - scripts
   - Rakefile
 
