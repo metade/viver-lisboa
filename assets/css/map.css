@@ -6,11 +6,21 @@ body.map-page {
     margin: 0;
     padding: 0;
     height: 100vh;
+    height: 100svh; /* Small viewport height - excludes dynamic UI */
+    height: 100dvh; /* Dynamic viewport height for modern browsers */
     overflow: hidden;
+    /* Support for iOS Safari */
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
 }
 
 .page-content {
     height: 100vh;
+    height: 100svh; /* Small viewport height - excludes dynamic UI */
+    height: 100dvh; /* Dynamic viewport height for modern browsers */
+    padding-bottom: env(safe-area-inset-bottom); /* Account for iOS safe area */
 }
 
 /* Header - Mobile first (normal header) */
@@ -38,6 +48,12 @@ body.map-page {
 .map-footer {
     flex-shrink: 0;
     animation: slideInUp 0.6s ease-out;
+    padding-bottom: calc(
+        1rem + env(safe-area-inset-bottom)
+    ); /* Add safe area padding */
+    /* Ensure footer is always visible on iOS */
+    position: relative;
+    z-index: 1002;
 }
 
 .map-footer .btn {
@@ -166,9 +182,22 @@ body.map-page {
 
     .map-header {
         border-radius: 0 !important;
+        padding-top: calc(1rem + env(safe-area-inset-top));
     }
 
     .map-footer {
         border-radius: 0 !important;
+    }
+
+    /* iOS Safari specific fixes */
+    body.map-page {
+        position: fixed;
+        overflow: hidden;
+    }
+
+    /* Prevent iOS Safari bouncing */
+    .page-content {
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
     }
 }
