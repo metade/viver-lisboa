@@ -26,6 +26,7 @@ class GoogleMyMapsDownloader
     @geojson_data = nil
     @valid_features = []
     @non_geo_features = []
+    @grouped_propostas = {}
     @downloaded_images = {}
     @images_dir = "assets/data/images"
   end
@@ -35,8 +36,9 @@ class GoogleMyMapsDownloader
     download_kml
     parse_kml_by_layers
     tidy_up_features
-    generate_geojson_from_features
+    group_propostas_by_slug
     download_images
+    generate_geojson_from_features
     generate_jekyll_pages
     generate_propostas_index
     generate_programa_page
@@ -180,9 +182,10 @@ class GoogleMyMapsDownloader
   end
 
   def generate_geojson_from_features
-    log "Generating GeoJSON from geographical features..."
+    log "Generating GeoJSON from geographical features with local image paths..."
 
     # Create GeoJSON structure directly from our parsed features
+    # (features should already have local image paths from download_images step)
     @geojson_data = {
       "type" => "FeatureCollection",
       "name" => "#{@freguesia_slug.capitalize} Geographical Features",
@@ -195,7 +198,7 @@ class GoogleMyMapsDownloader
       "features" => @valid_features
     }
 
-    log "Generated GeoJSON with #{@valid_features.length} features"
+    log "Generated GeoJSON with #{@valid_features.length} features using local image paths"
   end
 
   def extract_feature_from_placemark(placemark, include_geometry = true)
@@ -327,28 +330,104 @@ class GoogleMyMapsDownloader
       feature["properties"].transform_keys!(&:downcase)
 
       feature["properties"] = feature["properties"].slice(
-        "slug", "name", "proposta", "sumario", "descricao", "eixo", "coordinates"
+        "slug", "name", "proposta", "sumario", "descricao", "eixo", "coordinates", "gx_media_links"
       )
       feature
     end
   end
 
+  def group_propostas_by_slug
+    log "Grouping propostas by slug..."
+
+    @grouped_propostas = {}
+
+    # Process geographical features
+    @valid_features.each do |feature|
+      slug = feature["properties"]["slug"]
+      next unless slug && !slug.to_s.strip.empty?
+
+      slug = slug.to_s.strip
+      @grouped_propostas[slug] ||= {
+        "slug" => slug,
+        "has_map_location" => false,
+        "geographical_features" => [],
+        "non_geographical_features" => [],
+        "combined_properties" => {},
+        "all_images" => []
+      }
+
+      @grouped_propostas[slug]["has_map_location"] = true
+      @grouped_propostas[slug]["geographical_features"] << feature
+      merge_properties(@grouped_propostas[slug], feature["properties"])
+    end
+
+    # Process non-geographical features
+    @non_geo_features.each do |feature|
+      slug = feature["properties"]["slug"]
+      next unless slug && !slug.to_s.strip.empty?
+
+      slug = slug.to_s.strip
+      @grouped_propostas[slug] ||= {
+        "slug" => slug,
+        "has_map_location" => false,
+        "geographical_features" => [],
+        "non_geographical_features" => [],
+        "combined_properties" => {},
+        "all_images" => []
+      }
+
+      @grouped_propostas[slug]["non_geographical_features"] << feature
+      merge_properties(@grouped_propostas[slug], feature["properties"])
+    end
+
+    log "Grouped #{@valid_features.length + @non_geo_features.length} features into #{@grouped_propostas.length} unique propostas"
+  end
+
+  def merge_properties(group, properties)
+    # Collect images from all features
+    if properties["gx_media_links"] && !properties["gx_media_links"].to_s.strip.empty?
+      images = properties["gx_media_links"].to_s.split(/[\s,]+/).reject(&:empty?)
+      group["all_images"].concat(images)
+    end
+
+    # Merge other properties (prefer non-empty values)
+    properties.each do |key, value|
+      next if key == "gx_media_links" # Handle images separately
+      next if value.nil? || value.to_s.strip.empty?
+
+      if group["combined_properties"][key].nil? || group["combined_properties"][key].to_s.strip.empty?
+        group["combined_properties"][key] = value
+      elsif group["combined_properties"][key] != value && !value.to_s.strip.empty?
+        # If values differ, append the new value
+        case key
+        when "descricao", "sumario"
+          # For descriptions, combine with line breaks
+          existing = group["combined_properties"][key].to_s
+          unless existing.include?(value.to_s)
+            group["combined_properties"][key] = "#{existing}\n\n#{value}"
+          end
+        else
+          # For other fields, prefer the existing value but log the difference
+          log "Different values for #{key} in slug #{group["slug"]}: keeping '#{group["combined_properties"][key]}', ignoring '#{value}'"
+        end
+      end
+    end
+
+    # Remove duplicates and empty images
+    group["all_images"].uniq!
+    group["all_images"].reject! { |img| img.nil? || img.to_s.strip.empty? }
+  end
+
   def download_images
-    log "Processing images from gx_media_links..."
+    log "Processing images from grouped propostas..."
 
     image_count = 0
 
-    @valid_features.each_with_index do |feature, index|
-      properties = feature["properties"]
-      next unless properties && properties["gx_media_links"]
+    @grouped_propostas.each do |slug, group|
+      next if group["all_images"].empty?
 
-      media_links = properties["gx_media_links"].to_s.strip
-      next if media_links.empty?
-
-      # Handle multiple URLs separated by whitespace or commas
-      urls = media_links.split(/[\s,]+/).reject(&:empty?)
       downloaded_urls = []
-      urls.each do |url|
+      group["all_images"].each do |url|
         local_path = download_single_image(url)
         if local_path
           downloaded_urls << local_path
@@ -358,72 +437,118 @@ class GoogleMyMapsDownloader
         log "Failed to download image #{url}: #{e.message}"
       end
 
-      # Update the feature properties with local paths
+      # Update the group with downloaded image paths (combined for Jekyll pages)
       if downloaded_urls.any?
-        properties["gx_media_links"] = downloaded_urls.join(" ")
-      else
-        # Remove the property if no images were downloaded
-        properties.delete("gx_media_links")
+        group["combined_properties"]["gx_media_links"] = downloaded_urls.join(" ")
       end
+
+      # Update individual features with their own downloaded images (for GeoJSON)
+      update_individual_features_with_local_images(group, downloaded_urls)
     end
 
     log "Downloaded #{image_count} images to #{@images_dir}/"
   end
 
+  def update_individual_features_with_local_images(group, all_downloaded_urls)
+    # Create a mapping of original URLs to local paths
+    url_mapping = {}
+    group["all_images"].each_with_index do |original_url, index|
+      if index < all_downloaded_urls.length
+        url_mapping[original_url] = all_downloaded_urls[index]
+      end
+    end
+
+    # Update geographical features with their individual images
+    group["geographical_features"].each do |feature|
+      original_links = feature["properties"]["gx_media_links"]
+      next unless original_links
+
+      # Convert original URLs to local paths for this specific feature
+      original_urls = original_links.split(/[\s,]+/).reject(&:empty?)
+      local_urls = original_urls.map { |url| url_mapping[url] }.compact
+
+      if local_urls.any?
+        # Find the actual feature in @valid_features and update it
+        @valid_features.each do |valid_feature|
+          if valid_feature.equal?(feature)
+            valid_feature["properties"]["gx_media_links"] = local_urls.join(" ")
+            break
+          end
+        end
+      else
+        # Remove gx_media_links if no local images
+        @valid_features.each do |valid_feature|
+          if valid_feature.equal?(feature)
+            valid_feature["properties"].delete("gx_media_links")
+            break
+          end
+        end
+      end
+    end
+
+    # Update non-geographical features with their individual images
+    group["non_geographical_features"].each do |feature|
+      original_links = feature["properties"]["gx_media_links"]
+      next unless original_links
+
+      # Convert original URLs to local paths for this specific feature
+      original_urls = original_links.split(/[\s,]+/).reject(&:empty?)
+      local_urls = original_urls.map { |url| url_mapping[url] }.compact
+
+      if local_urls.any?
+        feature["properties"]["gx_media_links"] = local_urls.join(" ")
+      else
+        feature["properties"].delete("gx_media_links")
+      end
+    end
+  end
+
   def generate_jekyll_pages
-    log "Generating Jekyll pages for proposals with slugs..."
+    log "Generating Jekyll pages for grouped propostas..."
 
     generated_count = 0
 
-    # Process geographical features
-    @valid_features.each do |feature|
-      generated_count += 1 if generate_page_for_feature(feature, true)
-    end
-
-    # Process non-geographical features
-    @non_geo_features.each do |feature|
-      generated_count += 1 if generate_page_for_feature(feature, false)
+    @grouped_propostas.each do |slug, group|
+      generated_count += 1 if generate_page_for_group(group)
     end
 
     log "Generated #{generated_count} Jekyll pages total"
   end
 
-  def generate_page_for_feature(feature, has_geometry)
-    properties = feature["properties"]
-    return false unless properties && properties["slug"] && !properties["slug"].to_s.strip.empty?
+  def generate_page_for_group(group)
+    slug = group["slug"]
+    return false unless slug && !slug.to_s.strip.empty?
 
-    slug = properties["slug"].to_s.strip
     page_path = "freguesias/#{freguesia_slug}/propostas/#{slug}.md"
 
     # Create directory if it doesn't exist
     FileUtils.mkdir_p(File.dirname(page_path))
 
-    # Generate front matter
-    front_matter = generate_front_matter(feature, has_geometry)
+    # Generate front matter for the group
+    front_matter = generate_front_matter_for_group(group)
 
     # Write the page
     File.write(page_path, front_matter)
-    log "Generated page: #{page_path} (#{has_geometry ? "with" : "without"} map location)"
+    log "Generated page: #{page_path} (#{group["has_map_location"] ? "with" : "without"} map location, #{group["geographical_features"].length + group["non_geographical_features"].length} features)"
     true
   end
 
-  def generate_front_matter(feature, has_geometry = true)
-    properties = feature["properties"]
-    geometry = feature["geometry"]
+  def generate_front_matter_for_group(group)
+    properties = group["combined_properties"]
 
     # Build front matter hash
     front_matter_hash = {
       "layout" => "proposta",
       "freguesia" => freguesia,
       "freguesia_slug" => freguesia_slug,
-      "slug" => properties["slug"],
-      "has_map_location" => has_geometry,
+      "slug" => group["slug"],
+      "has_map_location" => group["has_map_location"],
       "parties" => page_data["parties"],
       "under_construction" => page_data["under_construction"],
       "programa_pdf" => page_data["programa_pdf"]
     }
 
-    # Add all properties as front matter variables
+    # Add all combined properties as front matter variables
     properties.each do |key, value|
       next if key == "slug" # Already added
       next if ["description", "tessellate", "extrude", "visibility", "coordinates"].include?(key) # fields to ignore or handle separately
@@ -447,26 +572,54 @@ class GoogleMyMapsDownloader
 
     front_matter_hash["proposta"] ||= front_matter_hash["name"]
 
-    # Add geometry information
-    if has_geometry && geometry
-      front_matter_hash["geometry"] = {
-        "type" => geometry["type"]
-      }
-      if geometry["coordinates"]
-        front_matter_hash["geometry"]["coordinates"] = geometry["coordinates"]
+    # Add geometry information from geographical features
+    if group["has_map_location"] && group["geographical_features"].any?
+      # Use the first geographical feature's geometry
+      first_geo_feature = group["geographical_features"].first
+      geometry = first_geo_feature["geometry"]
+
+      if geometry
+        front_matter_hash["geometry"] = {
+          "type" => geometry["type"]
+        }
+        if geometry["coordinates"]
+          front_matter_hash["geometry"]["coordinates"] = geometry["coordinates"]
+        end
       end
-    elsif !has_geometry && properties["coordinates"]
-      # For non-geo features, add coordinates as reference only
-      front_matter_hash["reference_coordinates"] = properties["coordinates"]
+
+      # If there are multiple geographical features, note this
+      if group["geographical_features"].length > 1
+        front_matter_hash["multiple_locations"] = true
+        front_matter_hash["location_count"] = group["geographical_features"].length
+      end
+    elsif !group["has_map_location"]
+      # For non-geo features, check if any have reference coordinates
+      non_geo_with_coords = group["non_geographical_features"].find { |f| f["properties"]["coordinates"] }
+      if non_geo_with_coords
+        front_matter_hash["reference_coordinates"] = non_geo_with_coords["properties"]["coordinates"]
+      end
     end
+
+    # Add feature count information
+    front_matter_hash["total_features"] = group["geographical_features"].length + group["non_geographical_features"].length
+    front_matter_hash["geographical_features"] = group["geographical_features"].length
+    front_matter_hash["non_geographical_features"] = group["non_geographical_features"].length
 
     # Convert to YAML and build final front matter
     front_matter = front_matter_hash.to_yaml
     front_matter += "---\n\n"
     front_matter += "<!-- This page was automatically generated from Google My Maps data -->\n"
     front_matter += "<!-- To edit this proposal, update the Google My Maps data and re-run the download script -->\n"
-    if !has_geometry
+    # Calculate total features before using it
+    total_features = group["geographical_features"].length + group["non_geographical_features"].length
+
+    if !group["has_map_location"]
       front_matter += "<!-- This proposal does not have a specific map location -->\n"
+    elsif group["geographical_features"].length > 1
+      front_matter += "<!-- This proposal has #{group["geographical_features"].length} map locations -->\n"
+    end
+    if total_features > 1
+      front_matter += "<!-- This page combines #{total_features} features with the same slug -->\n"
     end
 
     front_matter
@@ -724,11 +877,13 @@ class GoogleMyMapsDownloader
     puts "   📊 Valid features: #{@valid_features.length}"
     puts "   🖼️  Downloaded images: #{@downloaded_images.length}"
 
-    # Count generated pages
-    geo_features_with_slugs = @valid_features.count { |f| f["properties"] && f["properties"]["slug"] && !f["properties"]["slug"].to_s.strip.empty? }
-    non_geo_features_with_slugs = @non_geo_features.count { |f| f["properties"] && f["properties"]["slug"] && !f["properties"]["slug"].to_s.strip.empty? }
-    total_generated_pages = geo_features_with_slugs + non_geo_features_with_slugs
-    puts "   📄 Generated pages: #{total_generated_pages} (#{geo_features_with_slugs} with location, #{non_geo_features_with_slugs} without location)"
+    # Count generated pages and features
+    total_generated_pages = @grouped_propostas.length
+    pages_with_location = @grouped_propostas.count { |slug, group| group["has_map_location"] }
+    pages_without_location = total_generated_pages - pages_with_location
+    total_features = @valid_features.length + @non_geo_features.length
+    puts "   📄 Generated pages: #{total_generated_pages} (#{pages_with_location} with location, #{pages_without_location} without location)"
+    puts "   🔗 Total features: #{total_features} (grouped into #{total_generated_pages} unique propostas by slug)"
 
     puts "   💾 File size: #{format_file_size(file_size)}"
     puts "   📁 Output: #{@output_file}"
