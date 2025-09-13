@@ -1,0 +1,323 @@
+---
+layout: default
+---
+
+<div class="container-fluid px-0">
+    <!-- Header -->
+    <div class="py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-3">
+                            <li class="breadcrumb-item">
+                                <a
+                                    href="{{ page.freguesia_slug | freguesia_relative_url }}"
+                                >
+                                    <i class="bi bi-map-fill"></i> Mapa
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a
+                                    href="{{ page.freguesia_slug | freguesia_propostas_url }}"
+                                >
+                                    <i class="bi bi-list-ul"></i> Propostas
+                                </a>
+                            </li>
+                            <li
+                                class="breadcrumb-item active"
+                                aria-current="page"
+                            >
+                                <i class="bi bi-file-pdf"></i> Programa
+                            </li>
+                        </ol>
+                    </nav>
+
+                    <h1 class="display-4 fw-bold mb-2">
+                        {{ page.title | default: "Programa Completo" }}
+                    </h1>
+                    <p class="lead mb-0">
+                        {{ page.description | default: "Descarregue o programa
+                        completo da coligação Viver Lisboa para as Eleições
+                        Autárquicas 2025" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Under Construction Warning -->
+    {% include under_construction_warning.html %}
+
+    <!-- Download Section -->
+    <div class="container mb-4">
+        <div class="row">
+            <div class="col">
+                <div class="card border-primary">
+                    <div class="card-body text-center py-4">
+                        <i
+                            class="bi bi-file-pdf-fill text-danger mb-3"
+                            style="font-size: 3rem"
+                        ></i>
+                        <h5 class="card-title">Programa Completo</h5>
+                        <p class="card-text mb-4">
+                            Descarregue o programa completo da coligação Viver
+                            Lisboa: {{ page.freguesia }} em formato PDF para
+                            consulta offline.
+                        </p>
+                        <div
+                            class="d-flex justify-content-center gap-3 flex-wrap"
+                        >
+                            <a
+                                href="{{ page.programa_pdf }}"
+                                class="btn btn-primary btn-lg"
+                                target="_blank"
+                                download
+                            >
+                                <i class="bi bi-download me-2"></i>
+                                Descarregar PDF
+                            </a>
+                            <a
+                                href="{{ page.programa_pdf }}"
+                                class="btn btn-outline-primary btn-lg"
+                                target="_blank"
+                            >
+                                <i class="bi bi-eye me-2"></i>
+                                Ver no Browser
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Viewer Section -->
+    <div class="container-fluid px-0 mb-5">
+        <div class="row no-gutters">
+            <div class="col">
+                <div class="card">
+                    <div
+                        class="card-header d-flex justify-content-between align-items-center"
+                    >
+                        <h6 class="mb-0">
+                            <i class="bi bi-file-pdf me-2"></i>
+                            Pré-visualização do Programa
+                        </h6>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button
+                                type="button"
+                                class="btn btn-outline-secondary"
+                                onclick="toggleFullscreen()"
+                            >
+                                <i class="bi bi-arrows-fullscreen"></i>
+                            </button>
+                            <a
+                                href="{{ page.programa_pdf }}"
+                                class="btn btn-outline-primary"
+                                target="_blank"
+                            >
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="pdf-container" class="position-relative">
+                            <iframe
+                                id="pdf-viewer"
+                                src="{{ page.programa_pdf }}#toolbar=1&navpanes=1&scrollbar=1"
+                                style="width: 100%; height: 80vh; border: none"
+                                title="Programa {{ page.freguesia }} PDF"
+                                onerror="handlePdfError()"
+                            ></iframe>
+
+                            <!-- Fallback message if PDF fails to load -->
+                            <div id="pdf-error" class="d-none">
+                                <div class="alert alert-warning m-4">
+                                    <div class="d-flex align-items-start">
+                                        <i
+                                            class="bi bi-exclamation-triangle me-3 mt-1"
+                                        ></i>
+                                        <div>
+                                            <h6 class="alert-heading">
+                                                Não foi possível carregar o PDF
+                                            </h6>
+                                            <p class="mb-2">
+                                                O seu browser pode não suportar
+                                                a visualização de PDFs
+                                                incorporados. Pode descarregar o
+                                                ficheiro ou abri-lo numa nova
+                                                janela.
+                                            </p>
+                                            <div class="mt-3">
+                                                <a
+                                                    href="{{ page.programa_pdf }}"
+                                                    class="btn btn-primary me-2"
+                                                    target="_blank"
+                                                    download
+                                                >
+                                                    <i
+                                                        class="bi bi-download me-1"
+                                                    ></i>
+                                                    Descarregar PDF
+                                                </a>
+                                                <a
+                                                    href="{{ page.programa_pdf }}"
+                                                    class="btn btn-outline-primary"
+                                                    target="_blank"
+                                                >
+                                                    <i
+                                                        class="bi bi-box-arrow-up-right me-1"
+                                                    ></i>
+                                                    Abrir em Nova Janela
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="container mb-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Sobre este Programa
+                        </h5>
+                        <p class="card-text">
+                            Este documento contém o programa completo da
+                            coligação Viver Lisboa: {{ page.freguesia }} para as
+                            Eleições Autárquicas 2025. Inclui todas as propostas
+                            detalhadas, objetivos estratégicos e planos de
+                            implementação para a freguesia.
+                        </p>
+
+                        <div class="row mt-4">
+                            <div class="col-md-6 mb-3">
+                                <h6 class="fw-semibold mb-2">
+                                    <i
+                                        class="bi bi-geo-alt me-2 text-primary"
+                                    ></i>
+                                    Explorar no Mapa
+                                </h6>
+                                <p class="small mb-2">
+                                    Veja as propostas localizadas
+                                    geograficamente no mapa interativo.
+                                </p>
+                                <a
+                                    href="{{ page.freguesia_slug | freguesia_relative_url }}"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    <i class="bi bi-map me-1"></i>
+                                    Ver Mapa
+                                </a>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <h6 class="fw-semibold mb-2">
+                                    <i
+                                        class="bi bi-list-ul me-2 text-primary"
+                                    ></i>
+                                    Lista de Propostas
+                                </h6>
+                                <p class="small mb-2">
+                                    Navegue por todas as propostas organizadas
+                                    por categoria.
+                                </p>
+                                <a
+                                    href="{{ page.freguesia_slug | freguesia_propostas_url }}"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    <i class="bi bi-list-ul me-1"></i>
+                                    Ver Propostas
+                                </a>
+                            </div>
+                        </div>
+
+                        {% if page.parties %}
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="text-center">
+                                {% include parties.html %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function handlePdfError() {
+        document.getElementById("pdf-viewer").style.display = "none";
+        document.getElementById("pdf-error").classList.remove("d-none");
+    }
+
+    function toggleFullscreen() {
+        const container = document.getElementById("pdf-container");
+        const iframe = document.getElementById("pdf-viewer");
+        const btn = event.target.closest("button");
+
+        if (!document.fullscreenElement) {
+            // Enter fullscreen
+            if (container.requestFullscreen) {
+                container.requestFullscreen().then(() => {
+                    iframe.style.height = "100vh";
+                    btn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+                });
+            } else if (container.webkitRequestFullscreen) {
+                container.webkitRequestFullscreen();
+                iframe.style.height = "100vh";
+                btn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+            } else if (container.msRequestFullscreen) {
+                container.msRequestFullscreen();
+                iframe.style.height = "100vh";
+                btn.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+            }
+        } else {
+            // Exit fullscreen
+            if (document.exitFullscreen) {
+                document.exitFullscreen().then(() => {
+                    iframe.style.height = "80vh";
+                    btn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i>';
+                });
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+                iframe.style.height = "80vh";
+                btn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i>';
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+                iframe.style.height = "80vh";
+                btn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i>';
+            }
+        }
+    }
+
+    // Handle fullscreen change events
+    document.addEventListener("fullscreenchange", function () {
+        const iframe = document.getElementById("pdf-viewer");
+        const btn = document.querySelector(
+            'button[onclick="toggleFullscreen()"]',
+        );
+
+        if (!document.fullscreenElement) {
+            iframe.style.height = "80vh";
+            if (btn) btn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i>';
+        }
+    });
+
+    // Handle PDF load success (remove error fallback)
+    document.getElementById("pdf-viewer").addEventListener("load", function () {
+        document.getElementById("pdf-error").classList.add("d-none");
+    });
+</script>

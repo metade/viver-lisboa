@@ -40,6 +40,7 @@ class GoogleMyMapsDownloader
     download_images
     generate_jekyll_pages
     generate_propostas_index
+    generate_programa_page
     write_final_geojson
     cleanup
     print_summary
@@ -328,7 +329,8 @@ class GoogleMyMapsDownloader
       "slug" => properties["slug"],
       "has_map_location" => has_geometry,
       "parties" => page_data["parties"],
-      "under_construction" => page_data["under_construction"]
+      "under_construction" => page_data["under_construction"],
+      "programa_pdf" => page_data["programa_pdf"]
     }
 
     # Add all properties as front matter variables
@@ -401,6 +403,35 @@ class GoogleMyMapsDownloader
 
     # Write the index page
     File.write("freguesias/#{freguesia_slug}/propostas/index.md", index_content)
+  end
+
+  def generate_programa_page
+    # Only generate if programa_pdf is present
+    return unless page_data["programa_pdf"] && !page_data["programa_pdf"].to_s.strip.empty?
+
+    log "Generating #{freguesia_slug} programa page..."
+
+    # Generate the programa page content
+    front_matter = {
+      "layout" => "programa",
+      "freguesia_slug" => freguesia_slug,
+      "freguesia" => page_data["freguesia"],
+      "parties" => page_data["parties"],
+      "title" => "Programa Completo",
+      "description" => "Descarregue o programa completo da coligação Viver Lisboa: #{page_data["freguesia"]} para as Eleições Autárquicas 2025",
+      "under_construction" => page_data["under_construction"],
+      "programa_pdf" => page_data["programa_pdf"]
+    }
+
+    programa_content = <<~FRONTMATTER
+      #{front_matter.to_yaml}
+      ---
+
+    FRONTMATTER
+
+    # Write the programa page
+    File.write("freguesias/#{freguesia_slug}/programa.md", programa_content)
+    log "Generated programa page: freguesias/#{freguesia_slug}/programa.md"
   end
 
   def escape_html(text)
@@ -637,6 +668,11 @@ class GoogleMyMapsDownloader
     # Show non-geographical features summary
     if @non_geo_features.length > 0
       puts "   └─ Non-geographical proposals: #{@non_geo_features.length}"
+    end
+
+    # Show programa page generation
+    if page_data["programa_pdf"] && !page_data["programa_pdf"].to_s.strip.empty?
+      puts "   └─ Generated programa page with PDF: #{page_data["programa_pdf"]}"
     end
   end
 

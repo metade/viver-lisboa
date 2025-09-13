@@ -18,6 +18,16 @@ layout: default
                                     <i class="bi bi-map-fill"></i> Mapa
                                 </a>
                             </li>
+                            {% if page.programa_pdf %}
+                            <li class="breadcrumb-item">
+                                <a
+                                    href="/freguesias/{{ page.freguesia_slug }}/programa"
+                                    class="text-white-50"
+                                >
+                                    <i class="bi bi-file-pdf"></i> Programa
+                                </a>
+                            </li>
+                            {% endif %}
                             <li class="breadcrumb-item">
                                 <a
                                     href="{{ page.freguesia_slug | freguesia_propostas_url }}"

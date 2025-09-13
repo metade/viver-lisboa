@@ -57,10 +57,10 @@
           </div>
           {% endif %}
 
-          <div class="mt-3 d-flex gap-2 flex-wrap">
+          <div class="mt-3 d-flex gap-2 flex-nowrap">
               <button
                   type="button"
-                  class="btn btn-secondary btn-sm fw-medium shadow-sm"
+                  class="btn btn-secondary btn-sm fw-medium shadow-sm text-nowrap"
                   id="moreInfoBtn"
               >
                   <i class="bi bi-info-circle me-2"></i>Mais Informações
@@ -71,6 +71,14 @@
               >
                   Propostas
               </a>
+              {% if page.programa_pdf %}
+              <a
+                  href="/freguesias/{{ page.freguesia_slug }}/programa"
+                  class="btn btn-link text-white btn-sm fw-medium"
+              >
+                  Programa
+              </a>
+              {% endif %}
           </div>
       </header>
 
