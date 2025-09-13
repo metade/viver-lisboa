@@ -327,7 +327,8 @@ class GoogleMyMapsDownloader
       "freguesia_slug" => freguesia_slug,
       "slug" => properties["slug"],
       "has_map_location" => has_geometry,
-      "parties" => page_data["parties"]
+      "parties" => page_data["parties"],
+      "under_construction" => page_data["under_construction"]
     }
 
     # Add all properties as front matter variables
@@ -389,7 +390,8 @@ class GoogleMyMapsDownloader
       "freguesia" => page_data["freguesia"],
       "parties" => page_data["parties"],
       "title" => "Todas as Propostas",
-      "description" => "Explore todas as propostas da coligação Viver #{freguesia} para as Eleições Autárquicas 2025"
+      "description" => "Explore todas as propostas da coligação Viver #{freguesia} para as Eleições Autárquicas 2025",
+      "under_construction" => page_data["under_construction"]
     }
     index_content = <<~FRONTMATTER
       #{front_matter.to_yaml}

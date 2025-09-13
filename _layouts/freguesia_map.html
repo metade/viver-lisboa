@@ -44,6 +44,19 @@
               Propostas da coligação Viver Lisboa para as Eleições Autárquicas 2025 para {{ page.freguesia }}
           </p>
 
+          {% if page.under_construction %}
+          <div class="alert alert-warning mt-3 mb-0" role="alert">
+              <div class="d-flex align-items-center justify-content-between">
+                  <small class="mb-0">
+                      Propostas em desenvolvimento<br>
+                      O conteúdo pode sofrer alterações.
+                  </small>
+                  <i class="bi bi-exclamation-triangle-fill me-2 flex-shrink-0"></i>
+
+              </div>
+          </div>
+          {% endif %}
+
           <div class="mt-3 d-flex gap-2 flex-wrap">
               <button
                   type="button"

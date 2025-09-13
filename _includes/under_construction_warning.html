@@ -1,0 +1,28 @@
+{% if page.under_construction %}
+<div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+    <div class="d-flex align-items-start">
+        <i
+            class="bi bi-exclamation-triangle-fill me-3 mt-1 flex-shrink-0"
+            style="font-size: 1.2rem"
+        ></i>
+        <div class="flex-grow-1">
+            <h6 class="alert-heading mb-2">
+                <strong>Propostas em Desenvolvimento</strong>
+            </h6>
+            <p class="mb-0">
+                As propostas para {{ page.freguesia | default: "esta freguesia"
+                }} estão ainda em fase de desenvolvimento.
+                <br />
+                O conteúdo apresentado pode sofrer alterações até à finalização
+                do programa eleitoral.
+            </p>
+        </div>
+        <button
+            type="button"
+            class="btn-close flex-shrink-0"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+        ></button>
+    </div>
+</div>
+{% endif %}
