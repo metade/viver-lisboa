@@ -307,12 +307,6 @@ class GoogleMyMapsDownloader
     # Create directory if it doesn't exist
     FileUtils.mkdir_p(File.dirname(page_path))
 
-    # Skip if page already exists
-    if File.exist?(page_path)
-      log "Page already exists: #{page_path}"
-      return false
-    end
-
     # Generate front matter
     front_matter = generate_front_matter(feature, has_geometry)
 
