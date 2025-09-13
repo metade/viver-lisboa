@@ -7,6 +7,7 @@ _site/
 assets/data/*.pmtiles
 assets/data/images
 freguesias/*/propostas
+freguesias/*/programa.md
 
 # Bundler
 .bundle/

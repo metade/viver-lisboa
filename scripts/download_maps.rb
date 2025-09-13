@@ -33,16 +33,14 @@ class GoogleMyMapsDownloader
   def download_and_process
     validate_requirements
     download_kml
-    convert_to_geojson
-    filter_features
-    extract_non_geo_features
+    parse_kml_by_layers
     tidy_up_features
+    generate_geojson_from_features
     download_images
     generate_jekyll_pages
     generate_propostas_index
     generate_programa_page
     write_final_geojson
-    cleanup
     print_summary
   end
 
@@ -61,10 +59,10 @@ class GoogleMyMapsDownloader
       raise "Google My Maps ID is required"
     end
 
-    # Check if GDAL is available
-    unless system("which ogr2ogr > /dev/null 2>&1")
-      raise "GDAL/OGR is required but not found. Install with: brew install gdal (macOS) or apt-get install gdal-bin (Ubuntu)"
-    end
+    # Note: GDAL is no longer required for main processing but can be useful for debugging
+    # unless system("which ogr2ogr > /dev/null 2>&1")
+    #   raise "GDAL/OGR is required but not found. Install with: brew install gdal (macOS) or apt-get install gdal-bin (Ubuntu)"
+    # end
 
     # Check if http gem is available
     begin
@@ -109,74 +107,98 @@ class GoogleMyMapsDownloader
       end
 
       # Save raw KML for debugging
-      File.write("tmp/raw_data.kml", @kml_data)
-      log "Raw KML saved to tmp/raw_data.kml"
+      raw_kml_path = "tmp/#{freguesia_slug}/raw_data.kml"
+      File.write(raw_kml_path, @kml_data)
+      log "Raw KML saved to #{raw_kml_path}"
     rescue HTTP::Error => e
       raise "HTTP request failed: #{e.message}. This might be due to network connectivity issues, timeout, or Google Maps service issues."
     end
   end
 
-  def convert_to_geojson
-    log "Converting KML to GeoJSON using ogr2ogr..."
+  def parse_kml_by_layers
+    log "Parsing KML by layers..."
 
-    # Use -skipfailures to handle multiple layers gracefully
-    # This allows ogr2ogr to skip layers that can't be converted instead of failing entirely
-    conversion_success = system("ogr2ogr -f GeoJSON -skipfailures tmp/temp_data.geojson tmp/raw_data.kml 2>/dev/null")
-
-    unless conversion_success && File.exist?("tmp/temp_data.geojson")
-      # If it still fails, try without error suppression to see what's wrong
-      log "Conversion failed, retrying without error suppression for debugging..."
-      system("ogr2ogr -f GeoJSON -skipfailures tmp/temp_data.geojson tmp/raw_data.kml")
-      raise "Failed to convert KML to GeoJSON. This might happen if the KML file is empty/corrupted or there are GDAL version compatibility issues."
-    end
-
-    @geojson_data = JSON.parse(File.read("tmp/temp_data.geojson"))
-    log "Converted to GeoJSON with #{@geojson_data["features"].length} features"
-  end
-
-  def filter_features
-    log "Filtering features for valid coordinates..."
-
-    @valid_features = @geojson_data["features"].select do |feature|
-      validate_feature_geometry(feature)
-    end
-
-    log "Filtered #{@geojson_data["features"].length} features down to #{@valid_features.length} valid features"
-  end
-
-  def extract_non_geo_features
-    log "Extracting proposals without locations from KML..."
-
-    # Parse the KML to find features in "Propostas s/ Local" folder
     require "nokogiri"
 
     begin
       doc = Nokogiri::XML(@kml_data)
       doc.remove_namespaces!
 
-      # Find the "Propostas s/ Local" folder
+      # Find all folders in the KML
       folders = doc.xpath("//Folder")
-      non_geo_folder = folders.find { |folder| folder.xpath("name").text.include?("Propostas s/ Local") }
+      log "Found #{folders.length} folders in KML"
 
-      if non_geo_folder
-        placemarks = non_geo_folder.xpath(".//Placemark")
-        log "Found #{placemarks.length} proposals without locations"
+      folders.each do |folder|
+        folder_name = folder.xpath("name").text.strip
+        placemarks = folder.xpath(".//Placemark")
 
-        placemarks.each do |placemark|
-          feature = extract_feature_from_placemark(placemark)
-          @non_geo_features << feature if feature
+        log "Processing folder '#{folder_name}' with #{placemarks.length} placemarks"
+
+        if folder_name.include?("Propostas s/ Local") || folder_name.downcase.include?("sem local")
+          # This is the non-geographical layer
+          process_non_geo_layer(placemarks, folder_name)
+        else
+          # This is the geographical layer (first layer or default)
+          process_geo_layer(placemarks, folder_name)
         end
-
-        log "Extracted #{@non_geo_features.length} non-geographical proposals"
-      else
-        log "No 'Propostas s/ Local' folder found"
       end
+
+      # If no folders found, process all placemarks as geographical
+      if folders.empty?
+        all_placemarks = doc.xpath("//Placemark")
+        log "No folders found, processing all #{all_placemarks.length} placemarks as geographical"
+        process_geo_layer(all_placemarks, "Default")
+      end
+
+      log "Parsing complete: #{@valid_features.length} geographical features, #{@non_geo_features.length} non-geographical features"
     rescue => e
-      log "Error parsing KML for non-geographical features: #{e.message}"
+      log "Error parsing KML: #{e.message}"
+      raise "Failed to parse KML file: #{e.message}"
     end
   end
 
-  def extract_feature_from_placemark(placemark)
+  def process_geo_layer(placemarks, folder_name)
+    log "Processing geographical layer '#{folder_name}' with #{placemarks.length} placemarks"
+
+    placemarks.each do |placemark|
+      feature = extract_feature_from_placemark(placemark, true)
+      if feature && validate_feature_geometry(feature)
+        @valid_features << feature
+      elsif feature
+        log "Warning: Placemark '#{feature["properties"]["name"]}' in geographical layer has invalid geometry"
+      end
+    end
+  end
+
+  def process_non_geo_layer(placemarks, folder_name)
+    log "Processing non-geographical layer '#{folder_name}' with #{placemarks.length} placemarks"
+
+    placemarks.each do |placemark|
+      feature = extract_feature_from_placemark(placemark, false)
+      @non_geo_features << feature if feature
+    end
+  end
+
+  def generate_geojson_from_features
+    log "Generating GeoJSON from geographical features..."
+
+    # Create GeoJSON structure directly from our parsed features
+    @geojson_data = {
+      "type" => "FeatureCollection",
+      "name" => "#{@freguesia_slug.capitalize} Geographical Features",
+      "crs" => {
+        "type" => "name",
+        "properties" => {
+          "name" => "urn:ogc:def:crs:OGC:1.3:CRS84"
+        }
+      },
+      "features" => @valid_features
+    }
+
+    log "Generated GeoJSON with #{@valid_features.length} features"
+  end
+
+  def extract_feature_from_placemark(placemark, include_geometry = true)
     name = placemark.xpath("name").text.strip
     description = placemark.xpath("description").text
 
@@ -189,8 +211,8 @@ class GoogleMyMapsDownloader
         clean_key = key.strip.downcase
         clean_value = value.strip
 
-        # Handle coordinates specially
-        if clean_key == "coordenadas"
+        # Handle coordinates specially for non-geo features
+        if clean_key == "coordenadas" && !include_geometry
           coords = clean_value.split(",").map(&:strip).map(&:to_f)
           if coords.length >= 2
             properties["coordinates"] = coords
@@ -211,14 +233,82 @@ class GoogleMyMapsDownloader
       end
     end
 
-    # Create a pseudo-GeoJSON feature (without geometry for non-geo features)
+    # Extract geometry if this is a geographical feature
+    geometry = nil
+    if include_geometry
+      geometry = extract_geometry_from_placemark(placemark)
+    end
+
+    # Create GeoJSON feature
     {
       "type" => "Feature",
       "properties" => properties,
-      "geometry" => nil
+      "geometry" => geometry
     }
   rescue => e
     log "Error extracting feature from placemark: #{e.message}"
+    nil
+  end
+
+  def extract_geometry_from_placemark(placemark)
+    # Try to find Point coordinates
+    if point = placemark.xpath(".//Point/coordinates").first
+      coords_text = point.text.strip
+      if coords_text && !coords_text.empty?
+        # KML coordinates are in lon,lat,alt format
+        coords = coords_text.split(",").map(&:to_f)
+        if coords.length >= 2
+          return {
+            "type" => "Point",
+            "coordinates" => coords[0..1]  # Only take lon, lat
+          }
+        end
+      end
+    end
+
+    # Try to find LineString coordinates
+    if linestring = placemark.xpath(".//LineString/coordinates").first
+      coords_text = linestring.text.strip
+      if coords_text && !coords_text.empty?
+        coordinates = coords_text.split(/\s+/).map do |coord_set|
+          coords = coord_set.split(",").map(&:to_f)
+          (coords.length >= 2) ? coords[0..1] : nil
+        end.compact
+
+        if coordinates.length >= 2
+          return {
+            "type" => "LineString",
+            "coordinates" => coordinates
+          }
+        end
+      end
+    end
+
+    # Try to find Polygon coordinates
+    if polygon = placemark.xpath(".//Polygon").first
+      outer_boundary = polygon.xpath(".//outerBoundaryIs/LinearRing/coordinates").first
+      if outer_boundary
+        coords_text = outer_boundary.text.strip
+        if coords_text && !coords_text.empty?
+          coordinates = coords_text.split(/\s+/).map do |coord_set|
+            coords = coord_set.split(",").map(&:to_f)
+            (coords.length >= 2) ? coords[0..1] : nil
+          end.compact
+
+          if coordinates.length >= 4  # Polygon needs at least 4 points
+            return {
+              "type" => "Polygon",
+              "coordinates" => [coordinates]  # Wrap in array for GeoJSON format
+            }
+          end
+        end
+      end
+    end
+
+    # No valid geometry found
+    nil
+  rescue => e
+    log "Error extracting geometry: #{e.message}"
     nil
   end
 
@@ -625,14 +715,6 @@ class GoogleMyMapsDownloader
         ring.all? { |point| validate_point_coordinates(point) } &&
         ring.first == ring.last  # Ensure ring is closed
     end
-  end
-
-  def cleanup
-    # Keep raw_data.kml for debugging multi-layer issues
-    ["tmp/temp_data.geojson"].each do |file|
-      File.delete(file) if File.exist?(file)
-    end
-    log "Cleaned up temporary files (keeping raw_data.kml for debugging)"
   end
 
   def print_summary
