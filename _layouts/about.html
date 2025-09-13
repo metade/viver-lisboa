@@ -1,0 +1,32 @@
+---
+layout: default
+---
+
+<div class="container-fluid px-0">
+    <!-- Header with map link -->
+    <div class="text-white py-3 mb-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0 bg-transparent">
+                            <li class="breadcrumb-item">
+                                <a
+                                    href="{{ page.freguesia_slug | freguesia_relative_url }}"
+                                    class="text-white-50"
+                                >
+                                    <i class="bi bi-map-fill me-1"></i>Voltar ao
+                                    Mapa
+                                </a>
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col col-md-10 col-lg-9">{{content}}</div>
+</div>
