@@ -50,19 +50,6 @@ layout: default
                         {{ page.proposta }}
                     </h1>
                     {% endif %}
-
-                    <!-- Location info if available -->
-                    {% if page.geometry %}
-                    <div class="d-flex align-items-center text-muted mb-3">
-                        <i class="bi bi-geo-alt-fill me-2"></i>
-                        <span>
-                            {% if page.geometry.type == "Point" %} Localização:
-                            {{ page.geometry.coordinates[1] | round: 5 }}, {{
-                            page.geometry.coordinates[0] | round: 5 }} {% else
-                            %} Área definida no mapa {% endif %}
-                        </span>
-                    </div>
-                    {% endif %}
                 </header>
 
                 <!-- Description -->
