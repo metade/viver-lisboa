@@ -30,9 +30,9 @@
   </head>
 
   <body class="map-page">
-    <main class="page-content" aria-label="Content">
-      <div id="map"></div>
-      <div class="map-overlay bg-primary bg-opacity-75 text-white rounded-3 p-3 shadow">
+    <main class="page-content d-flex flex-column" aria-label="Content">
+      <!-- Header (Mobile) / Overlay (Desktop) -->
+      <header class="map-header bg-primary bg-opacity-75 text-white p-3 shadow">
           <div class="d-flex justify-content-between align-items-start">
               <h1 class="h4 fw-semibold mb-2">
                   <small class="h6 d-block mb-0"><em>Viver</em> Lisboa</small>
@@ -59,6 +59,11 @@
                   Propostas
               </a>
           </div>
+      </header>
+
+      <!-- Map Container -->
+      <div class="map-container flex-grow-1">
+        <div id="map"></div>
       </div>
 
       <!-- Side Panel Content Templates -->
@@ -91,29 +96,19 @@
           </div>
       </div>
 
-      <!-- CTA Overlay (Desktop) / Footer (Mobile) -->
+      <!-- Footer (Mobile) / CTA Overlay (Desktop) -->
       {%- if page.submit_propostas_url -%}
-      <div class="cta-overlay bg-accent text-white shadow-lg rounded-3 p-3 d-none d-md-block">
+      <footer class="map-footer bg-accent text-white p-3">
         <div class="text-center">
-          <h5 class="h6 fw-bold mb-1">Tens uma ideia?</h5>
-          <p class="small mb-3 opacity-75">Sugere as tuas propostas para {{ page.freguesia }}</p>
-          <a href="{{ page.submit_propostas_url }}" target="_blank" class="btn btn-light btn-sm fw-semibold text-dark">
-            <i class="bi bi-plus-circle me-1"></i>
+          <h6 class="fw-bold mb-2 d-md-none">Tens uma ideia para {{ page.freguesia }}?</h6>
+          <h5 class="h6 fw-bold mb-1 d-none d-md-block">Tens uma ideia?</h5>
+          <p class="small mb-3 opacity-75 d-none d-md-block">Sugere as tuas propostas para {{ page.freguesia }}</p>
+          <a href="{{ page.submit_propostas_url }}" target="_blank" class="btn btn-light fw-semibold text-dark w-100 d-md-inline-block d-md-w-auto">
+            <i class="bi bi-plus-circle me-2 d-md-me-1"></i>
             Sugere as tuas propostas
           </a>
         </div>
-      </div>
-
-      <!-- Mobile Footer CTA -->
-      <div class="cta-footer bg-accent text-white p-3 d-md-none">
-        <div class="text-center">
-          <h6 class="fw-bold mb-2">Tens uma ideia para {{ page.freguesia }}?</h6>
-          <a href="{{ page.submit_propostas_url }}" target="_blank" class="btn btn-light fw-semibold text-dark w-100">
-            <i class="bi bi-plus-circle me-2"></i>
-            Sugere as tuas propostas
-          </a>
-        </div>
-      </div>
+      </footer>
       {%- endif -%}
 
       <!-- Side Panel -->
@@ -136,6 +131,8 @@
 
     <!-- PMTiles -->
     <script src="https://unpkg.com/pmtiles@4.3.0/dist/pmtiles.js"></script>
+
+
 
     <!-- Map JS -->
     <script src="{{ '/assets/js/map.js' | asset_url }}"></script>

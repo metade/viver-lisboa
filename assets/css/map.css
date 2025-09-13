@@ -1,7 +1,7 @@
 /* Bootstrap Icons */
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css");
 
-/* Essential map-specific styles that can't be replaced with Bootstrap */
+/* Mobile-First Flexbox Layout */
 body.map-page {
     margin: 0;
     padding: 0;
@@ -9,27 +9,44 @@ body.map-page {
     overflow: hidden;
 }
 
-#map {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 100%;
+.page-content {
     height: 100vh;
 }
 
-.map-overlay {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 1000;
-    max-width: 380px;
-    backdrop-filter: blur(10px);
+/* Header - Mobile first (normal header) */
+.map-header {
+    flex-shrink: 0;
     animation: fadeIn 0.5s ease-out;
 }
 
-/* Custom button hover effect */
-.map-overlay .btn:hover {
+.map-header .btn:hover {
     transform: translateY(-1px);
+}
+
+/* Map Container - Takes remaining space */
+.map-container {
+    position: relative;
+    overflow: hidden;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+/* Footer - Mobile first (normal footer) */
+.map-footer {
+    flex-shrink: 0;
+    animation: slideInUp 0.6s ease-out;
+}
+
+.map-footer .btn {
+    transition: all 0.2s ease;
+}
+
+.map-footer .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* MapLibre GL controls styling */
@@ -41,18 +58,6 @@ body.map-page {
 
 .maplibregl-ctrl button {
     border-radius: 6px !important;
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 /* Side Panel width */
@@ -80,48 +85,18 @@ body.map-page {
     }
 }
 
-/* CTA Overlay (Desktop) */
-.cta-overlay {
-    position: absolute;
-    bottom: 40px;
-    right: 10px;
-    z-index: 1000;
-    max-width: 380px;
-    backdrop-filter: blur(10px);
-    animation: slideInUp 0.6s ease-out;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.cta-overlay .btn {
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.cta-overlay .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* CTA Footer (Mobile) */
-.cta-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    animation: slideInUp 0.6s ease-out;
-}
-
-.cta-footer .btn {
-    transition: all 0.2s ease;
-}
-
-.cta-footer .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Slide in animation for CTA elements */
 @keyframes slideInUp {
     from {
         opacity: 0;
@@ -133,21 +108,67 @@ body.map-page {
     }
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-    .map-overlay {
-        top: 10px;
-        left: 10px;
-        right: 10px;
-        max-width: none;
+/* Utility class for auto width on larger screens */
+@media (min-width: 768px) {
+    .d-md-w-auto {
+        width: auto !important;
+    }
+}
+
+/* Desktop - Convert to overlays */
+@media (min-width: 769px) {
+    .page-content {
+        position: relative;
     }
 
+    /* Convert header to overlay */
+    .map-header {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+        max-width: 380px;
+        backdrop-filter: blur(10px);
+        border-radius: 0.75rem !important;
+    }
+
+    /* Map takes full viewport */
+    .map-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    /* Convert footer to overlay */
+    .map-footer {
+        position: absolute;
+        bottom: 40px;
+        right: 10px;
+        z-index: 1000;
+        max-width: 380px;
+        backdrop-filter: blur(10px);
+        border-radius: 0.75rem !important;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .map-footer .btn {
+        white-space: nowrap;
+    }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
     #detailsPanel {
         --bs-offcanvas-width: 100vw;
     }
 
-    /* Adjust map height to accommodate mobile footer */
-    body.map-page #map {
-        padding-bottom: 80px;
+    .map-header {
+        border-radius: 0 !important;
+    }
+
+    .map-footer {
+        border-radius: 0 !important;
     }
 }
