@@ -126,38 +126,15 @@ document.addEventListener("DOMContentLoaded", function () {
   maplibregl.addProtocol("pmtiles", protocol.tile);
 
   // Initialize the map
+  const MAPTILER_KEY = "BlScxjvw8WYk3TGxzgU8";
+
   const map = new maplibregl.Map({
     container: "map",
-    style: {
-      version: 8,
-      sources: {
-        "carto-light": {
-          type: "raster",
-          tiles: [
-            "https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
-            "https://cartodb-basemaps-b.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
-            "https://cartodb-basemaps-c.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
-            "https://cartodb-basemaps-d.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
-          ],
-          tileSize: 256,
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        },
-      },
-      layers: [
-        {
-          id: "carto-light-layer",
-          type: "raster",
-          source: "carto-light",
-          minzoom: 0,
-          maxzoom: 22,
-        },
-      ],
-    },
+    style: `https://api.maptiler.com/maps/positron/style.json?key=${MAPTILER_KEY}`,
     center:
       window.pageData && window.pageData.mapCenter
         ? window.pageData.mapCenter
-        : [-9.13628, 38.72614], // Dynamic center coordinates from page data with Arroios fallback
+        : [-9.13628, 38.72614], // Arroios fallback
     zoom: 14,
   });
 
