@@ -113,6 +113,14 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     map.setPaintProperty("propostas-polygons-outline", "line-opacity", 0.8);
 
+    // Update linestring color
+    map.setPaintProperty(
+      "propostas-linestrings",
+      "line-color",
+      colorExpression,
+    );
+    map.setPaintProperty("propostas-linestrings", "line-opacity", 0.8);
+
     // Update marker color
     map.setPaintProperty("propostas-markers", "circle-color", colorExpression);
     map.setPaintProperty("propostas-markers", "circle-opacity", 0.9);
@@ -229,6 +237,20 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
+    // Add propostas layer for LineString geometries
+    map.addLayer({
+      id: "propostas-linestrings",
+      type: "line",
+      source: "pmtiles-source",
+      "source-layer": "propostas",
+      filter: ["==", ["geometry-type"], "LineString"],
+      paint: {
+        "line-color": "#3b82f6",
+        "line-width": 4,
+        "line-opacity": 0.8,
+      },
+    });
+
     // Add propostas layer for point geometries (circles/markers) - render last so they appear on top
     map.addLayer({
       id: "propostas-markers",
@@ -260,6 +282,15 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     map.on("mouseleave", "propostas-polygons-fill", () => {
+      map.getCanvas().style.cursor = "";
+    });
+
+    // Add hover effects for linestrings
+    map.on("mouseenter", "propostas-linestrings", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+
+    map.on("mouseleave", "propostas-linestrings", () => {
       map.getCanvas().style.cursor = "";
     });
 
@@ -384,6 +415,15 @@ document.addEventListener("DOMContentLoaded", function () {
       map.getCanvas().style.cursor = "";
     });
 
+    // Add hover effect for linestrings
+    map.on("mouseenter", "propostas-linestrings", function () {
+      map.getCanvas().style.cursor = "pointer";
+    });
+
+    map.on("mouseleave", "propostas-linestrings", function () {
+      map.getCanvas().style.cursor = "";
+    });
+
     console.log("Propostas layer loaded successfully!");
 
     // Set up click handlers after a small delay to ensure layers are fully registered
@@ -401,6 +441,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (map.getLayer("propostas-polygons-selected")) {
       map.removeLayer("propostas-polygons-selected");
       map.removeSource("propostas-polygons-selected");
+    }
+    if (map.getLayer("propostas-linestrings-selected")) {
+      map.removeLayer("propostas-linestrings-selected");
+      map.removeSource("propostas-linestrings-selected");
     }
   }
 
@@ -447,6 +491,29 @@ document.addEventListener("DOMContentLoaded", function () {
         "line-width": 5,
         "line-opacity": 0.8,
         "line-dasharray": [2, 2],
+      },
+    });
+  }
+
+  // Helper function to add highlight styling for linestrings
+  function highlightLineString(feature) {
+    map.addSource("propostas-linestrings-selected", {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: [feature],
+      },
+    });
+
+    map.addLayer({
+      id: "propostas-linestrings-selected",
+      type: "line",
+      source: "propostas-linestrings-selected",
+      paint: {
+        "line-color": "#000000",
+        "line-width": 6,
+        "line-opacity": 0.9,
+        "line-dasharray": [3, 3],
       },
     });
   }
@@ -572,7 +639,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Function to set up click handlers (called after layers are loaded)
   function setupClickHandlers() {
-    // Add single map click handler that prioritizes markers over polygons
+    // Add single map click handler that prioritizes markers over polygons and linestrings
     map.on("click", function (e) {
       // Query all features at the click point
       const markerFeatures = map.queryRenderedFeatures(e.point, {
@@ -583,7 +650,11 @@ document.addEventListener("DOMContentLoaded", function () {
         layers: ["propostas-polygons-fill"],
       });
 
-      // Prioritize markers over polygons
+      const linestringFeatures = map.queryRenderedFeatures(e.point, {
+        layers: ["propostas-linestrings"],
+      });
+
+      // Prioritize markers over polygons and linestrings
       if (markerFeatures.length > 0) {
         // Handle marker click
         const properties = markerFeatures[0].properties;
@@ -597,8 +668,21 @@ document.addEventListener("DOMContentLoaded", function () {
         // Create panel content and show panel
         const panelContent = createPanelContent(properties);
         showPanelWithContent(panelContent);
+      } else if (linestringFeatures.length > 0) {
+        // Handle linestring click (priority over polygons)
+        const properties = linestringFeatures[0].properties;
+
+        // Remove previous selection styling
+        removeSelectionStyling();
+
+        // Highlight selected linestring
+        highlightLineString(linestringFeatures[0]);
+
+        // Create panel content and show panel
+        const panelContent = createPanelContent(properties);
+        showPanelWithContent(panelContent);
       } else if (polygonFeatures.length > 0) {
-        // Handle polygon click (only if no markers are present)
+        // Handle polygon click (lowest priority)
         const properties = polygonFeatures[0].properties;
 
         // Remove previous selection styling
