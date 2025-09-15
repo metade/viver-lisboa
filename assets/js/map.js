@@ -20,6 +20,12 @@ document.addEventListener("DOMContentLoaded", function () {
     "#66bc3d", // --brand-green
     "#7a3dbc", // --brand-purple
     "#4b5d73", // --brand-slate
+    // extra colours
+    "#2d9cdb", // --brand-blue (bright sky blue for contrast)
+    "#1a2b3c", // --brand-navy (deep grounding neutral)
+    "#f4f2ef", // --brand-ivory (soft off-white background)
+    "#e67a9c", // --brand-pink (playful highlight)
+    "#2bbbad", // --brand-teal (fresh secondary accent)
   ];
 
   // Function to create eixo color mapping based on alphabetical order
