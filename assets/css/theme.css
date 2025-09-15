@@ -1,6 +1,9 @@
 /* 1) Font */
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap");
 
+/* Import centralized eixo colors */
+@import "eixo-colors.css";
+
 /* 2) Core tokens */
 :root {
     /* Brand palette */
@@ -280,58 +283,4 @@ strong,
     }
 }
 
-/* Eixo color-coded badges */
-.badge-eixo-1 {
-    background-color: var(--brand-red) !important;
-    color: white !important;
-}
-
-.badge-eixo-2 {
-    background-color: var(--brand-yellow) !important;
-    color: white !important;
-}
-
-.badge-eixo-3 {
-    background-color: var(--brand-green) !important;
-    color: white !important;
-}
-
-.badge-eixo-4 {
-    background-color: var(--brand-purple) !important;
-    color: white !important;
-}
-
-.badge-eixo-5 {
-    background-color: var(--brand-slate) !important;
-    color: white !important;
-}
-
-.badge-eixo-6 {
-    background-color: #2d9cdb !important;
-    color: white !important;
-}
-
-.badge-eixo-7 {
-    background-color: #1a2b3c !important;
-    color: white !important;
-}
-
-.badge-eixo-8 {
-    background-color: #f4f2ef !important;
-    color: black !important;
-}
-
-.badge-eixo-9 {
-    background-color: #e67a9c !important;
-    color: white !important;
-}
-
-.badge-eixo-10 {
-    background-color: #2bbbad !important;
-    color: white !important;
-}
-
-.badge-eixo-overflow {
-    background-color: #000000 !important;
-    color: white !important;
-}
+/* Eixo color-coded badges are now imported from eixo-colors.css */

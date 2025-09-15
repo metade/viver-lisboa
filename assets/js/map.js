@@ -13,19 +13,19 @@ document.addEventListener("DOMContentLoaded", function () {
   // Flag to prevent multiple initialization
   let isDataInitialized = false;
 
-  // Colors for eixo property (in order) - matching theme.css brand colors
-  const eixoColors = [
-    "#ed4154", // --brand-red
-    "#ffb91b", // --brand-yellow
-    "#66bc3d", // --brand-green
-    "#7a3dbc", // --brand-purple
-    "#4b5d73", // --brand-slate
-    // extra colours
-    "#2d9cdb", // --brand-blue (bright sky blue for contrast)
-    "#1a2b3c", // --brand-navy (deep grounding neutral)
-    "#f4f2ef", // --brand-ivory (soft off-white background)
-    "#e67a9c", // --brand-pink (playful highlight)
-    "#2bbbad", // --brand-teal (fresh secondary accent)
+  // Colors for eixo property - now loaded from global eixoColors variable
+  // This variable is provided by the centralized eixo-colors.js include
+  const eixoColors = window.eixoColors || [
+    "#ed4154", // fallback colors if global not available
+    "#ffb91b",
+    "#66bc3d",
+    "#7a3dbc",
+    "#4b5d73",
+    "#2d9cdb",
+    "#1a2b3c",
+    "#f4f2ef",
+    "#e67a9c",
+    "#2bbbad",
   ];
 
   // Function to create eixo color mapping based on alphabetical order

@@ -1,0 +1,30 @@
+---
+---
+/* Eixo Colors - Generated from _data/eixo_colors.yml */
+/* This file provides CSS custom properties and badge classes for eixo colors */
+
+:root {
+  /* Eixo color custom properties */
+{% for color in site.data.eixo_colors.colors -%}
+  {{ color.css_var }}: {{ color.hex }}; /* {{ color.description }} */
+{% endfor -%}
+  {{ site.data.eixo_colors.overflow.css_var }}: {{ site.data.eixo_colors.overflow.hex }}; /* {{ site.data.eixo_colors.overflow.description }} */
+}
+
+/* Eixo badge classes */
+{% for color in site.data.eixo_colors.colors -%}
+{% assign index = forloop.index %}
+.badge-eixo-{{ index }} {
+  background-color: {{ color.hex }} !important;
+  {% if color.name == "ivory" -%}
+  color: black !important;
+  {% else -%}
+  color: white !important;
+  {% endif -%}
+}
+
+{% endfor -%}
+.badge-eixo-overflow {
+  background-color: {{ site.data.eixo_colors.overflow.hex }} !important;
+  color: white !important;
+}
