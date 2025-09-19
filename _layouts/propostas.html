@@ -1,9 +1,6 @@
 ---
 layout: default
 ---
-<!-- Include centralized eixo colors JavaScript -->
-<script>{% include eixo-colors.js %}</script>
-
 <div class="container-fluid">
     <!-- Header -->
     <div class="py-4">
@@ -46,7 +43,7 @@ layout: default
     {% include under_construction_warning.html %}
 
     <!-- Eixo Legend -->
-    <div class="container mb-4" id="eixoLegendContainer" style="display: none">
+    <div class="container mb-4" id="eixoLegendContainer">
         <div class="row">
             <div class="col">
                 <div class="card bg-light">
@@ -56,7 +53,12 @@ layout: default
                             Eixos das Propostas
                         </h6>
                         <div id="eixoLegend" class="d-flex flex-wrap gap-2">
-                            <!-- Legend items will be populated by JavaScript -->
+                            {% for eixo in page.eixos %}
+                              <div class="d-flex align-items-center legend-item small" data-eixo="{{eixo}}" style="cursor: pointer;">
+                                  <span class="badge {{ eixo | eixo_badge_class: page.freguesia_slug }} me-2" style="min-width: 20px; font-size: 0.7rem;">&nbsp;</span>
+                                  {{ eixo }}
+                              </div>
+                            {% endfor %}
                         </div>
                         <div class="mt-2">
                             <button
@@ -193,7 +195,7 @@ layout: default
                                 <div class="d-flex flex-column align-items-end">
                                     {% if proposta.eixo %}
                                     <small
-                                        class="eixo-badge mt-1"
+                                        class="eixo-badge badge {{ proposta.eixo | eixo_badge_class: page.freguesia_slug }} mt-1"
                                         data-eixo="{{ proposta.eixo }}"
                                     >
                                         <i class="bi bi-tag-fill me-1"></i>{{
@@ -237,120 +239,21 @@ layout: default
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            setupEixoColors();
             setupSearch();
+            setupEixoLegendFilters();
         });
 
-        // Eixo color mapping system
-        let eixoColorMapping = {};
-        // Use centralized eixo colors from global variable
-        const eixoColors = window.eixoColors || [
-            "#ed4154", // fallback colors if global not available
-            "#ffb91b",
-            "#66bc3d",
-            "#7a3dbc",
-            "#4b5d73",
-            "#2d9cdb",
-            "#1a2b3c",
-            "#f4f2ef",
-            "#e67a9c",
-            "#2bbbad"
-        ];
-
-        function setupEixoColors() {
-            // Collect all unique eixo values
-            const uniqueEixos = new Set();
-            document.querySelectorAll("[data-eixo]").forEach((element) => {
-                const eixo = element.getAttribute("data-eixo");
-                if (eixo) {
-                    uniqueEixos.add(eixo);
-                }
-            });
-
-            // Sort alphabetically and assign colors
-            const sortedEixos = Array.from(uniqueEixos).sort();
-            sortedEixos.forEach((eixo, index) => {
-                if (index < eixoColors.length) {
-                    eixoColorMapping[eixo] = {
-                        color: eixoColors[index],
-                        classIndex: index + 1,
-                    };
-                } else {
-                    // Fallback for more than 5 eixo values - use overflow badge
-                    console.warn(
-                        `⚠️ Eixo overflow: "${eixo}" (position ${index + 1}) using black badge. Consider adding more colors.`,
-                    );
-                    eixoColorMapping[eixo] = {
-                        color: "#000000",
-                        classIndex: "overflow",
-                    };
-                }
-            });
-
-            console.log(
-                "Eixo color mapping created for propostas index:",
-                eixoColorMapping,
-            );
-
-            // Apply colors to eixo elements in footer
-            document.querySelectorAll(".eixo-badge").forEach((eixoElement) => {
-                const eixo = eixoElement.getAttribute("data-eixo");
-                if (eixoColorMapping[eixo]) {
-                    eixoElement.style.color = "#ffffff";
-                    eixoElement.style.backgroundColor =
-                        eixoColorMapping[eixo].color;
-                    eixoElement.style.fontWeight = "600";
-                    eixoElement.style.padding = "2px 6px";
-                    eixoElement.style.borderRadius = "4px";
-                    eixoElement.style.fontSize = "0.75rem";
-                } else {
-                    eixoElement.style.color = "#ffffff";
-                    eixoElement.style.backgroundColor = "#3b82f6"; // fallback blue
-                    eixoElement.style.fontWeight = "600";
-                    eixoElement.style.padding = "2px 6px";
-                    eixoElement.style.borderRadius = "4px";
-                    eixoElement.style.fontSize = "0.75rem";
-                }
-            });
-
-            // Create and show legend
-            createEixoLegend();
-        }
-
-        function createEixoLegend() {
+        function setupEixoLegendFilters() {
             const legendContainer = document.getElementById("eixoLegend");
-            const legendWrapper = document.getElementById(
-                "eixoLegendContainer",
-            );
+            for (const legendItem of legendContainer.children) {
+              const eixo = legendItem.dataset.eixo
+              console.log(eixo)
+              legendItem.addEventListener("click", function () {
+                  filterByEixo(eixo);
+                  updateLegendSelection(eixo);
+              });
 
-            if (Object.keys(eixoColorMapping).length === 0) {
-                return;
             }
-
-            // Sort eixos alphabetically for display
-            const sortedEixos = Object.keys(eixoColorMapping).sort();
-
-            sortedEixos.forEach((eixo) => {
-                const legendItem = document.createElement("div");
-                legendItem.className = "d-flex align-items-center legend-item";
-                legendItem.style.cursor = "pointer";
-                legendItem.setAttribute("data-eixo-filter", eixo);
-                legendItem.innerHTML = `
-                <span class="badge badge-eixo-${eixoColorMapping[eixo].classIndex} me-2" style="min-width: 20px; font-size: 0.7rem;">&nbsp;</span>
-                <span class="small">${eixo}</span>
-            `;
-
-                // Add click handler for filtering
-                legendItem.addEventListener("click", function () {
-                    filterByEixo(eixo);
-                    updateLegendSelection(eixo);
-                });
-
-                legendContainer.appendChild(legendItem);
-            });
-
-            // Show the legend
-            legendWrapper.style.display = "block";
 
             // Add clear filter handler
             document

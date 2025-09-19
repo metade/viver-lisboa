@@ -154,8 +154,7 @@
     <!-- PMTiles -->
     <script src="https://unpkg.com/pmtiles@4.3.0/dist/pmtiles.js"></script>
 
-    <!-- Include centralized eixo colors JavaScript -->
-    <script>{% include eixo-colors.js %}</script>
+    <script>window.eixoColorMapping = {{ page.freguesia_slug | freguesia_eixo_colour_mapping | my_to_json }}</script>
 
     <!-- Map JS -->
     <script src="{{ '/assets/js/map.js' | asset_url }}"></script>

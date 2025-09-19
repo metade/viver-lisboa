@@ -8,73 +8,15 @@
 // proper zoom level regardless of how the geometry is tiled in the PMTiles data.
 document.addEventListener("DOMContentLoaded", function () {
   // Global variable to store eixo color mapping
-  let eixoColorMapping = {};
+  let eixoColorMapping = window.eixoColorMapping || {};
 
   // Flag to prevent multiple initialization
   let isDataInitialized = false;
 
-  // Colors for eixo property - now loaded from global eixoColors variable
-  // This variable is provided by the centralized eixo-colors.js include
-  const eixoColors = window.eixoColors || [
-    "#ed4154", // fallback colors if global not available
-    "#ffb91b",
-    "#66bc3d",
-    "#7a3dbc",
-    "#4b5d73",
-    "#2d9cdb",
-    "#1a2b3c",
-    "#f4f2ef",
-    "#e67a9c",
-    "#2bbbad",
-  ];
-
-  // Function to create eixo color mapping based on alphabetical order
-  function createEixoColorMapping(features) {
-    const uniqueEixos = new Set();
-
-    // Collect all unique eixo values from features
-    features.forEach((feature) => {
-      if (feature.properties && feature.properties.eixo) {
-        uniqueEixos.add(feature.properties.eixo);
-      }
-    });
-
-    // Sort alphabetically and assign colors
-    const sortedEixos = Array.from(uniqueEixos).sort();
-    sortedEixos.forEach((eixo, index) => {
-      if (index < eixoColors.length) {
-        eixoColorMapping[eixo] = {
-          color: eixoColors[index],
-          classIndex: index + 1,
-        };
-      } else {
-        // Fallback for more than 5 eixo values - use overflow badge
-        console.warn(
-          `⚠️ Eixo overflow: "${eixo}" (position ${index + 1}) using black badge. Consider adding more colors.`,
-        );
-        eixoColorMapping[eixo] = {
-          color: "#000000",
-          classIndex: "overflow",
-        };
-      }
-    });
-
-    console.log("Eixo color mapping created:", eixoColorMapping);
-    console.log("Found eixo values:", sortedEixos);
-    console.log("Color assignments:");
-    sortedEixos.forEach((eixo, index) => {
-      if (index < eixoColors.length) {
-        console.log(
-          `  ${eixo}: ${eixoColors[index]} (badge-eixo-${index + 1})`,
-        );
-      }
-    });
-  }
-
   // Function to get eixo badge class
   function getEixoBadgeClass(eixo) {
     if (eixoColorMapping[eixo]) {
-      return `badge-eixo-${eixoColorMapping[eixo].classIndex}`;
+      return `badge-eixo-${eixoColorMapping[eixo].className}`;
     }
     return "badge-primary"; // fallback
   }
@@ -102,6 +44,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const colorExpression = createEixoColorExpression();
+    console.log(colorExpression);
 
     // Update polygon fill color (with lower opacity for better marker visibility)
     map.setPaintProperty(
@@ -314,7 +257,6 @@ document.addEventListener("DOMContentLoaded", function () {
           sourceLayer: "propostas",
         });
         console.log("Found", propostasFeatures.length, "propostas features");
-        createEixoColorMapping(propostasFeatures);
 
         // Update map layer colors with eixo-based styling
         updateLayerColorsWithEixo();

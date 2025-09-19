@@ -10,19 +10,20 @@ require "yaml"
 require "mini_magick"
 
 class GoogleMyMapsDownloader
-  attr_reader :valid_features, :page_data, :freguesia_slug, :output_file
+  attr_reader :valid_features, :page_data, :freguesia_slug, :output_file, :local
 
   # Image processing configuration
   MAX_IMAGE_WIDTH = 1200
   MAX_IMAGE_HEIGHT = 800
   JPEG_QUALITY = 85
 
-  def initialize(page_data:, freguesia_slug:, verbose: false)
-    @verbose = verbose
-    @freguesia_slug = freguesia_slug
-    @output_file = "tmp/#{freguesia_slug}/propostas.geojson"
+  def initialize(page_data:, freguesia_slug:, verbose: false, local: false)
     @page_data = page_data
-    @kml_data = nil
+    @freguesia_slug = freguesia_slug
+    @verbose = verbose
+    @local = local
+
+    @output_file = "tmp/#{freguesia_slug}/propostas.geojson"
     @geojson_data = nil
     @valid_features = []
     @non_geo_features = []
@@ -33,8 +34,8 @@ class GoogleMyMapsDownloader
 
   def download_and_process
     validate_requirements
-    download_kml
-    parse_kml_by_layers
+    kml = download_kml
+    parse_kml_by_layers(kml)
     tidy_up_features
     group_propostas_by_slug
     download_images
@@ -84,6 +85,9 @@ class GoogleMyMapsDownloader
   end
 
   def download_kml
+    raw_kml_path = "tmp/#{freguesia_slug}/raw_data.kml"
+    return File.read(raw_kml_path) if local
+
     url = "https://www.google.com/maps/d/kml?mid=#{my_google_maps_id}&forcekml=1"
     log "Downloading KML from: #{url}"
 
@@ -100,30 +104,32 @@ class GoogleMyMapsDownloader
         raise "Failed to download map data (HTTP #{response.code}). Possible issues: map is not publicly accessible, invalid map ID, or network connectivity issues."
       end
 
-      @kml_data = response.body.to_s
-      log "Downloaded #{@kml_data.length} bytes of KML data"
+      kml_data = response.body.to_s
+      log "Downloaded #{kml_data.length} bytes of KML data"
 
       # Basic validation that we got KML content
-      unless @kml_data.match?(/<\?xml|<kml/i)
-        raise "Downloaded content doesn't appear to be valid KML. Content preview: #{@kml_data[0..200]}..."
+      unless kml_data.match?(/<\?xml|<kml/i)
+        raise "Downloaded content doesn't appear to be valid KML. Content preview: #{kml_data[0..200]}..."
       end
 
       # Save raw KML for debugging
-      raw_kml_path = "tmp/#{freguesia_slug}/raw_data.kml"
-      File.write(raw_kml_path, @kml_data)
+
+      File.write(raw_kml_path, kml_data)
       log "Raw KML saved to #{raw_kml_path}"
+
+      kml_data
     rescue HTTP::Error => e
       raise "HTTP request failed: #{e.message}. This might be due to network connectivity issues, timeout, or Google Maps service issues."
     end
   end
 
-  def parse_kml_by_layers
+  def parse_kml_by_layers(kml_data)
     log "Parsing KML by layers..."
 
     require "nokogiri"
 
     begin
-      doc = Nokogiri::XML(@kml_data)
+      doc = Nokogiri::XML(kml_data)
       doc.remove_namespaces!
 
       # Find all folders in the KML
@@ -419,6 +425,7 @@ class GoogleMyMapsDownloader
   end
 
   def download_images
+    return if local
     log "Processing images from grouped propostas..."
 
     image_count = 0
@@ -628,6 +635,13 @@ class GoogleMyMapsDownloader
   def generate_propostas_index
     log "Generating #{freguesia_slug} propostas index page..."
 
+    eixos = Set.new
+    @grouped_propostas.each do |slug, group|
+      eixo = group.dig("combined_properties", "eixo")
+      eixos << eixo unless eixo.nil?
+    end
+    eixos_colour_map = build_eixo_colour_map(eixos)
+
     # Generate the index page content
     front_matter = {
       "layout" => "propostas",
@@ -636,7 +650,9 @@ class GoogleMyMapsDownloader
       "parties" => page_data["parties"],
       "title" => "Todas as Propostas",
       "description" => "Explore todas as propostas da coligação Viver #{freguesia} para as Eleições Autárquicas 2025",
-      "under_construction" => page_data["under_construction"]
+      "under_construction" => page_data["under_construction"],
+      "eixos" => eixos.sort,
+      "eixos_colour_map" => eixos_colour_map
     }
     index_content = <<~FRONTMATTER
       #{front_matter.to_yaml}
@@ -646,6 +662,35 @@ class GoogleMyMapsDownloader
 
     # Write the index page
     File.write("freguesias/#{freguesia_slug}/propostas/index.md", index_content)
+  end
+
+  def build_eixo_colour_map(eixos)
+    colours = YAML.load_file("_data/eixo_colors.yml")["colors"]
+    unmatched_eixos = eixos.dup
+
+    result = {}
+    eixos.each do |eixo|
+      colour = colours.detect { |c| c["eixos"].include? eixo }
+
+      if colour
+        result[eixo] = {
+          "color" => colour["hex"],
+          "className" => colour["name"]
+        }
+        unmatched_eixos.delete(eixo)
+        colours.delete(colour)
+      end
+    end
+
+    unmatched_eixos.each_with_index do |eixo, index|
+      colour = colours[index]
+      result[eixo] = {
+        "color" => colour["hex"],
+        "className" => colour["name"]
+      }
+    end
+
+    result
   end
 
   def generate_programa_page
