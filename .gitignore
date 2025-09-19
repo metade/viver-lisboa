@@ -12,7 +12,6 @@ freguesias/*/programa.md
 # Bundler
 .bundle/
 vendor/
-Gemfile.lock
 
 # Ruby
 *.gem

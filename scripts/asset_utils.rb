@@ -1,28 +1,28 @@
 #!/usr/bin/env ruby
 
-require 'fileutils'
-require 'digest'
-require 'optparse'
+require "fileutils"
+require "digest"
+require "optparse"
 
 class AssetUtils
   def initialize
-    @root_dir = File.expand_path('..', __dir__)
-    @site_dir = File.join(@root_dir, '_site')
-    @assets_dir = File.join(@root_dir, 'assets')
+    @root_dir = File.expand_path("..", __dir__)
+    @site_dir = File.join(@root_dir, "_site")
+    @assets_dir = File.join(@root_dir, "assets")
   end
 
   def clean_fingerprinted_assets
     puts "Cleaning fingerprinted assets..."
 
     # Remove fingerprinted assets from source
-    Dir.glob(File.join(@assets_dir, '**', '*-????????.*')).each do |file|
+    Dir.glob(File.join(@assets_dir, "**", "*-????????.*")).each do |file|
       File.delete(file)
       puts "Removed: #{File.basename(file)}"
     end
 
     # Remove fingerprinted assets from built site
     if Dir.exist?(@site_dir)
-      Dir.glob(File.join(@site_dir, 'assets', '**', '*-????????.*')).each do |file|
+      Dir.glob(File.join(@site_dir, "assets", "**", "*-????????.*")).each do |file|
         File.delete(file)
         puts "Removed: #{File.basename(file)}"
       end
@@ -37,7 +37,7 @@ class AssetUtils
 
     return unless Dir.exist?(@site_dir)
 
-    fingerprinted_files = Dir.glob(File.join(@site_dir, 'assets', '**', '*-????????.*'))
+    fingerprinted_files = Dir.glob(File.join(@site_dir, "assets", "**", "*-????????.*"))
 
     if fingerprinted_files.empty?
       puts "No fingerprinted assets found. Run 'bundle exec jekyll build' first."
@@ -45,7 +45,7 @@ class AssetUtils
     end
 
     fingerprinted_files.sort.each do |file|
-      relative_path = file.sub(@site_dir, '')
+      relative_path = file.sub(@site_dir, "")
       file_size = File.size(file)
       puts "#{relative_path} (#{format_bytes(file_size)})"
     end
@@ -54,7 +54,7 @@ class AssetUtils
   end
 
   def verify_cache_headers
-    headers_file = File.join(@root_dir, '_headers')
+    headers_file = File.join(@root_dir, "_headers")
 
     unless File.exist?(headers_file)
       puts "ERROR: _headers file not found!"
@@ -69,20 +69,20 @@ class AssetUtils
     # Check for fingerprinted asset rules
     checks = [
       {
-        pattern: '/assets/css/*-????????.css',
-        description: 'CSS fingerprinted assets'
+        pattern: "/assets/css/*-????????.css",
+        description: "CSS fingerprinted assets"
       },
       {
-        pattern: '/assets/js/*-????????.js',
-        description: 'JS fingerprinted assets'
+        pattern: "/assets/js/*-????????.js",
+        description: "JS fingerprinted assets"
       },
       {
-        pattern: '/assets/images/*-????????.*',
-        description: 'Image fingerprinted assets'
+        pattern: "/assets/images/*-????????.*",
+        description: "Image fingerprinted assets"
       },
       {
-        pattern: 'Cache-Control: public, max-age=31536000, immutable',
-        description: 'Long-term caching for fingerprinted assets'
+        pattern: "Cache-Control: public, max-age=31536000, immutable",
+        description: "Long-term caching for fingerprinted assets"
       }
     ]
 
@@ -112,15 +112,15 @@ class AssetUtils
     }
 
     # Find all fingerprinted assets
-    Dir.glob(File.join(@site_dir, 'assets', '**', '*-????????.*')).each do |file|
-      relative_path = file.sub(@site_dir, '')
+    Dir.glob(File.join(@site_dir, "assets", "**", "*-????????.*")).each do |file|
+      relative_path = file.sub(@site_dir, "")
       original_name = File.basename(file).sub(/-[a-f0-9]{8}(\.\w+)$/, '\1')
       original_path = File.join(File.dirname(relative_path), original_name)
 
       manifest[:fingerprinted_assets][original_path] = relative_path
     end
 
-    manifest_file = File.join(@site_dir, 'assets', 'manifest.json')
+    manifest_file = File.join(@site_dir, "assets", "manifest.json")
     FileUtils.mkdir_p(File.dirname(manifest_file))
     File.write(manifest_file, JSON.pretty_generate(manifest))
 
@@ -138,17 +138,17 @@ class AssetUtils
     total_size = 0
     fingerprinted_count = 0
 
-    Dir.glob(File.join(@site_dir, 'assets', '**', '*')).each do |file|
+    Dir.glob(File.join(@site_dir, "assets", "**", "*")).each do |file|
       next unless File.file?(file)
 
       ext = File.extname(file).downcase
       size = File.size(file)
 
-      asset_types[ext] ||= { count: 0, size: 0, fingerprinted: 0 }
+      asset_types[ext] ||= {count: 0, size: 0, fingerprinted: 0}
       asset_types[ext][:count] += 1
       asset_types[ext][:size] += size
 
-      if File.basename(file) =~ /-[a-f0-9]{8}\./
+      if /-[a-f0-9]{8}\./.match?(File.basename(file))
         asset_types[ext][:fingerprinted] += 1
         fingerprinted_count += 1
       end
@@ -157,21 +157,21 @@ class AssetUtils
     end
 
     asset_types.sort.each do |ext, stats|
-      fingerprint_pct = stats[:count] > 0 ? (stats[:fingerprinted].to_f / stats[:count] * 100).round(1) : 0
+      fingerprint_pct = (stats[:count] > 0) ? (stats[:fingerprinted].to_f / stats[:count] * 100).round(1) : 0
       puts sprintf("%-10s: %3d files, %8s, %4.1f%% fingerprinted",
-                   ext.empty? ? '(no ext)' : ext,
-                   stats[:count],
-                   format_bytes(stats[:size]),
-                   fingerprint_pct)
+        ext.empty? ? "(no ext)" : ext,
+        stats[:count],
+        format_bytes(stats[:size]),
+        fingerprint_pct)
     end
 
     puts "-" * 50
     puts sprintf("%-10s: %3d files, %8s, %4.1f%% fingerprinted",
-                 "TOTAL",
-                 asset_types.values.sum { |s| s[:count] },
-                 format_bytes(total_size),
-                 asset_types.values.sum { |s| s[:count] } > 0 ?
-                   (fingerprinted_count.to_f / asset_types.values.sum { |s| s[:count] } * 100).round(1) : 0)
+      "TOTAL",
+      asset_types.values.sum { |s| s[:count] },
+      format_bytes(total_size),
+      (asset_types.values.sum { |s| s[:count] } > 0) ?
+        (fingerprinted_count.to_f / asset_types.values.sum { |s| s[:count] } * 100).round(1) : 0)
   end
 
   private
@@ -209,15 +209,15 @@ if __FILE__ == $0
   utils = AssetUtils.new
 
   case command
-  when 'clean'
+  when "clean"
     utils.clean_fingerprinted_assets
-  when 'list'
+  when "list"
     utils.list_fingerprinted_assets
-  when 'verify'
+  when "verify"
     utils.verify_cache_headers
-  when 'manifest'
+  when "manifest"
     utils.generate_cache_manifest
-  when 'stats'
+  when "stats"
     utils.show_asset_stats
   else
     puts "Available commands: clean, list, verify, manifest, stats"
