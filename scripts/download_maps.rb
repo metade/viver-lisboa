@@ -684,10 +684,12 @@ class GoogleMyMapsDownloader
 
     unmatched_eixos.each_with_index do |eixo, index|
       colour = colours[index]
-      result[eixo] = {
-        "color" => colour["hex"],
-        "className" => colour["name"]
-      }
+      if colour
+        result[eixo] = {
+          "color" => colour["hex"],
+          "className" => colour["name"]
+        }
+      end
     end
 
     result
