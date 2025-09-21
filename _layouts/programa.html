@@ -10,6 +10,7 @@ layout: default
                 <div class="col">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-3">
+                            {% if page.freguesia_slug %}
                             <li class="breadcrumb-item">
                                 <a
                                     href="{{ page.freguesia_slug | freguesia_relative_url }}"
@@ -17,6 +18,7 @@ layout: default
                                     <i class="bi bi-map-fill"></i> Mapa
                                 </a>
                             </li>
+                            {% endif %}
                             <li class="breadcrumb-item">
                                 <a
                                     href="{{ page.freguesia_slug | freguesia_propostas_url }}"

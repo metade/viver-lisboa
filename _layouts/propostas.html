@@ -9,11 +9,13 @@ layout: default
                 <div class="col">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-3">
+                            {% if page.freguesia_slug %}
                             <li class="breadcrumb-item">
                                 <a href="{{ page.freguesia_slug | freguesia_relative_url }}">
                                     <i class="bi bi-map-fill"></i> Mapa
                                 </a>
                             </li>
+                            {% endif %}
                             {% if page.programa_pdf %}
                             <li class="breadcrumb-item">
                                 <a href="/freguesias/{{ page.freguesia_slug }}/programa">
@@ -21,9 +23,11 @@ layout: default
                                 </a>
                             </li>
                             {% endif %}
+                            {% if page.freguesia_slug %}
                             <li class="breadcrumb-item active" aria-current="page">
                                 <i class="bi bi-list-ul"></i> Propostas
                             </li>
+                            {% endif %}
                         </ol>
                     </nav>
 
@@ -32,7 +36,7 @@ layout: default
                     </h1>
                     <p class="lead mb-0">
                         {{ page.description | default: "Conheça as nossas
-                        propostas para transformar Arroios" }}
+                        propostas para transformar Lisboa" }}
                     </p>
                 </div>
             </div>
@@ -80,6 +84,7 @@ layout: default
         <div class="row">
             <div class="col">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
+                    {% if page.freguesia_slug %}
                     <a
                         href="{% if page.freguesia_slug %}{{ page.freguesia_slug | freguesia_relative_url }}{% else %}{{ site.baseurl }}/#map{% endif %}"
                         class="btn btn-outline-primary"
@@ -87,6 +92,16 @@ layout: default
                         <i class="bi bi-map-fill me-2"></i>
                         Ver no Mapa
                     </a>
+                    {% endif %}
+                    {% if page.programa_pdf %}
+                    <a
+                        href="programa/"
+                        class="btn btn-outline-primary"
+                    >
+                        <i class="bi bi-file-pdf me-2"></i>
+                        Ver programa completo (PDF)
+                    </a>
+                    {% endif %}
                     <div class="ms-auto">
                         <input
                             type="text"
@@ -105,17 +120,10 @@ layout: default
     <div class="container mb-5">
         <div class="row g-4" id="propostasGrid">
             <!-- Automatically generate cards from proposta pages -->
-            {% comment %} Find all pages in freguesias/*/propostas/ directories
-            {% endcomment %} {% assign all_propostas = site.pages | where_exp:
-            "page", "page.path contains 'freguesias/' and page.path contains
-            '/propostas/' and page.path !=
-            'freguesias/arroios/propostas/index.md' and page.path !=
-            'freguesias/alvalade/propostas/index.md'" %} {% comment %} Filter by
-            freguesia if specified {% endcomment %} {% if page.freguesia_slug %}
-            {% assign filtered_propostas = all_propostas | where_exp: "item",
-            "item.path contains page.freguesia_slug" %} {% else %} {% assign
-            filtered_propostas = all_propostas %} {% endif %} {% for proposta in
-            filtered_propostas %}
+            {% comment %} Find all pages in the same directory as current file
+            {% endcomment %}
+            {% assign all_propostas = site.pages | pages_in_same_directory: page %}
+            {% for proposta in all_propostas %}
             <div class="col-lg-4 col-md-6">
                 <div class="card h-100 shadow-sm proposta-card">
                     {% if proposta.gx_media_links %} {% assign images =
@@ -137,6 +145,7 @@ layout: default
                                 <em>Viver</em> Lisboa
                             </h4>
                             <div class="h5 mb-3">
+                                <code>{{page.title}}</code>
                                 {% assign path_parts = proposta.path | split:
                                 '/' %} {% for part in path_parts %} {% if part
                                 == 'freguesias' %} {% assign next_index =
@@ -210,7 +219,7 @@ layout: default
                 {% endfor %}
 
                 <!-- Fallback content if no propostas found -->
-                {% if filtered_propostas.size == 0 %}
+                {% if all_propostas.size == 0 %}
                 <div class="col-12">
                     <div class="text-center py-5">
                         <i

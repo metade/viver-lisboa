@@ -81,7 +81,7 @@ class GoogleMyMapsDownloader
     FileUtils.mkdir_p(@images_dir) unless Dir.exist?(@images_dir)
 
     # Ensure propostas directory exists
-    FileUtils.mkdir_p("freguesias/#{freguesia_slug}/propostas") unless Dir.exist?("freguesias/#{freguesia_slug}/propostas")
+    FileUtils.mkdir_p("#{output_root_path}propostas") unless Dir.exist?("#{output_root_path}propostas")
   end
 
   def download_kml
@@ -194,7 +194,7 @@ class GoogleMyMapsDownloader
     # (features should already have local image paths from download_images step)
     @geojson_data = {
       "type" => "FeatureCollection",
-      "name" => "#{@freguesia_slug.capitalize} Geographical Features",
+      "name" => "#{page_data["title"]} Geographical Features",
       "crs" => {
         "type" => "name",
         "properties" => {
@@ -526,7 +526,7 @@ class GoogleMyMapsDownloader
     slug = group["slug"]
     return false unless slug && !slug.to_s.strip.empty?
 
-    page_path = "freguesias/#{freguesia_slug}/propostas/#{slug}.md"
+    page_path = "#{output_root_path}propostas/#{slug}.md"
 
     # Create directory if it doesn't exist
     FileUtils.mkdir_p(File.dirname(page_path))
@@ -546,7 +546,7 @@ class GoogleMyMapsDownloader
     # Build front matter hash
     front_matter_hash = {
       "layout" => "proposta",
-      "freguesia" => freguesia,
+      "freguesia" => page_data["freguesia"],
       "freguesia_slug" => freguesia_slug,
       "slug" => group["slug"],
       "has_map_location" => group["has_map_location"],
@@ -649,7 +649,7 @@ class GoogleMyMapsDownloader
       "freguesia" => page_data["freguesia"],
       "parties" => page_data["parties"],
       "title" => "Todas as Propostas",
-      "description" => "Explore todas as propostas da coligação Viver #{freguesia} para as Eleições Autárquicas 2025",
+      "description" => "Explore todas as propostas da coligação Viver Lisboa #{page_data["freguesia"]} para as Eleições Autárquicas 2025",
       "under_construction" => page_data["under_construction"],
       "eixos" => eixos.sort,
       "eixos_colour_map" => eixos_colour_map
@@ -661,7 +661,7 @@ class GoogleMyMapsDownloader
     FRONTMATTER
 
     # Write the index page
-    File.write("freguesias/#{freguesia_slug}/propostas/index.md", index_content)
+    File.write("#{output_root_path}propostas/index.md", index_content)
   end
 
   def build_eixo_colour_map(eixos)
@@ -720,8 +720,8 @@ class GoogleMyMapsDownloader
     FRONTMATTER
 
     # Write the programa page
-    File.write("freguesias/#{freguesia_slug}/programa.md", programa_content)
-    log "Generated programa page: freguesias/#{freguesia_slug}/programa.md"
+    File.write("#{output_root_path}programa.md", programa_content)
+    log "Generated programa page: #{output_root_path}programa.md"
   end
 
   def escape_html(text)
@@ -861,7 +861,7 @@ class GoogleMyMapsDownloader
     # Create the final GeoJSON structure
     final_geojson = {
       "type" => "FeatureCollection",
-      "name" => "#{@freguesia_slug.capitalize} Layer (#{my_google_maps_id})",
+      "name" => "#{page_data["title"]} Layer (#{my_google_maps_id})",
       "crs" => {
         "type" => "name",
         "properties" => {
@@ -970,7 +970,11 @@ class GoogleMyMapsDownloader
     end
   end
 
-  def freguesia
-    freguesia_slug.humanize
+  def output_root_path
+    if freguesia_slug.nil?
+      ""
+    else
+      "freguesias/#{freguesia_slug}/"
+    end
   end
 end

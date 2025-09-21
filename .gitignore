@@ -6,6 +6,7 @@ _site/
 
 assets/data/*.pmtiles
 assets/data/images
+propostas
 freguesias/*/propostas
 freguesias/*/programa.md
 

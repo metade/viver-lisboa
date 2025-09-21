@@ -29,6 +29,8 @@ module Jekyll
 
     # Generate URL for propostas page within a freguesia context
     def freguesia_propostas_url(freguesia_slug)
+      return "/propostas/" if freguesia_slug.nil?
+
       if Jekyll.env == "production"
         # Production: subdomain, so just /propostas
         "/propostas/"

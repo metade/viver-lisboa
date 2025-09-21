@@ -36,8 +36,15 @@ def get_freguesia_pages
   site.read
 
   site.pages.select do |page|
-    page.path.match?(/^freguesias\/[^\/]+\/index\.html$/)
+    page.path == "index.html" ||
+      page.path.match?(/^freguesias\/[^\/]+\/index\.html$/)
   end
+end
+
+desc "Process data for the city"
+task :cidade do
+  page = get_freguesia_pages.find { |p| p.path == "index.html" }
+  process_freguesia(nil, page.data)
 end
 
 desc "Process data for a specific freguesia"
@@ -94,6 +101,7 @@ end
 CLEAN.include("tmp/*")
 CLEAN.include("assets/data/*.pmtiles")
 CLEAN.include("assets/data/images/*")
+CLEAN.include("propostas/*")
 CLEAN.include("freguesias/*/propostas/*")
 CLEAN.include("freguesias/*/programa.md")
 CLEAN.include("_site/**/*")
