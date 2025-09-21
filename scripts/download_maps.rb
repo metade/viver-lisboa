@@ -6,8 +6,10 @@ require "uri"
 require "digest"
 require "fileutils"
 require "active_support/inflector"
+require "active_support/core_ext/object/blank"
 require "yaml"
 require "mini_magick"
+require_relative "qr_code_generator"
 
 class GoogleMyMapsDownloader
   attr_reader :valid_features, :page_data, :freguesia_slug, :output_file, :local
@@ -40,6 +42,7 @@ class GoogleMyMapsDownloader
     group_propostas_by_slug
     download_images
     generate_geojson_from_features
+    generate_qr_codes
     generate_jekyll_pages
     generate_propostas_index
     generate_programa_page
@@ -205,6 +208,26 @@ class GoogleMyMapsDownloader
     }
 
     log "Generated GeoJSON with #{@valid_features.length} features using local image paths"
+  end
+
+  def generate_qr_codes
+    return if @valid_features.empty?
+
+    data = @valid_features.map do |feature|
+      pp feature
+      slug = feature.dig("properties", "slug")
+      name = feature.dig("properties", "name")
+
+      next if slug.blank? || name.blank?
+
+      {name: name, url: "https://#{freguesia_slug}.viver-lisboa.org/propostas/#{slug}"}
+    end.compact
+
+    return if data.empty?
+
+    pp data
+    puts "#{output_root_path}propostas/qrcodes.pdf"
+    QRCodeGenerator.call(data, "#{output_root_path}propostas/qrcodes.pdf")
   end
 
   def extract_feature_from_placemark(placemark, include_geometry = true)

@@ -7,6 +7,9 @@ gem "http", "~> 5.0"
 gem "activesupport"
 gem "nokogiri", "~> 1.15"
 gem "mini_magick", "~> 4.12"
+gem "rqrcode", "~> 2.0"
+gem "prawn", "~> 2.4"
+gem "chunky_png", "~> 1.4"
 
 # Jekyll plugins
 group :jekyll_plugins do
