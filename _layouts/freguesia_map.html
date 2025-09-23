@@ -59,19 +59,19 @@
           {% endif %}
 
           <div class="mt-3 d-flex gap-2 flex-nowrap">
-              <button
-                  type="button"
-                  class="btn btn-secondary btn-sm fw-medium shadow-sm text-nowrap"
-                  id="moreInfoBtn"
-              >
-                  <i class="bi bi-info-circle me-2"></i>Mais Informações
-              </button>
               <a
                   href="{{ page.freguesia_slug | freguesia_propostas_url }}"
-                  class="btn btn-link text-white btn-sm fw-medium"
+                  class="btn btn-secondary text-white btn-sm shadow-sm fw-medium"
               >
-                  Propostas
+                  Todas as Propostas
               </a>
+              <button
+                  type="button"
+                  class="btn btn-link text-white btn-sm fw-medium text-nowrap"
+                  id="moreInfoBtn"
+              >
+                  Mais Informações
+              </button>
               {% if page.programa_pdf %}
               <a
                   href="/freguesias/{{ page.freguesia_slug }}/programa"
