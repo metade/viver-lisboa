@@ -10,8 +10,6 @@ module Jekyll
     end
 
     def freguesia_eixo_colour_mapping(freguesia_slug)
-      return {} if freguesia_slug.nil?
-
       page = @context.registers[:page]
       return page["eixos_colour_map"] if page["eixos_colour_map"]
 

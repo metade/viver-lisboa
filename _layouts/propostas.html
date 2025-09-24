@@ -197,21 +197,19 @@ layout: default
                             >
                                 <a
                                     href="{{ proposta | freguesia_proposta_url }}"
-                                    class="btn btn-primary btn-sm"
+                                    class="btn btn-primary btn-sm me-auto text-nowrap flex-shrink-0"
                                 >
                                     Ver Detalhes
                                 </a>
-                                <div class="d-flex flex-column align-items-end">
-                                    {% if proposta.eixo %}
-                                    <small
-                                        class="eixo-badge badge {{ proposta.eixo | eixo_badge_class: page.freguesia_slug }} mt-1"
-                                        data-eixo="{{ proposta.eixo }}"
-                                    >
-                                        <i class="bi bi-tag-fill me-1"></i>{{
-                                        proposta.eixo }}
-                                    </small>
-                                    {% endif %}
-                                </div>
+                                {% if proposta.eixo %}
+                                <small
+                                    class="eixo-badge badge {{ proposta.eixo | eixo_badge_class: page.freguesia_slug }} flex-shrink-1"
+                                    data-eixo="{{ proposta.eixo }}"
+                                >
+                                    <i class="bi bi-tag-fill me-1"></i>
+                                    <span class="text-wrap">{{ proposta.eixo }}</span>
+                                </small>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
