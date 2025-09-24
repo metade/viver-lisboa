@@ -214,7 +214,6 @@ class GoogleMyMapsDownloader
     return if @valid_features.empty?
 
     data = @valid_features.map do |feature|
-      pp feature
       slug = feature.dig("properties", "slug")
       name = feature.dig("properties", "name")
 
@@ -225,8 +224,6 @@ class GoogleMyMapsDownloader
 
     return if data.empty?
 
-    pp data
-    puts "#{output_root_path}propostas/qrcodes.pdf"
     QRCodeGenerator.call(data, "#{output_root_path}propostas/qrcodes.pdf")
   end
 
@@ -706,7 +703,9 @@ class GoogleMyMapsDownloader
     end
 
     unmatched_eixos.each_with_index do |eixo, index|
-      colour = colours[index]
+      # Distribute colors evenly across the available color array
+      color_index = (index * colours.length / unmatched_eixos.length).to_i
+      colour = colours[color_index]
       if colour
         result[eixo] = {
           "color" => colour["hex"],

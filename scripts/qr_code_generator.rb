@@ -22,8 +22,8 @@ class QRCodeGenerator
 
         # Add title (small for stickers)
         pdf.font_size(8)
-        pdf.text item[:title], align: :center, style: :bold
         pdf.move_down 5
+        pdf.text item[:title], align: :center, style: :bold
 
         # Generate QR code
         qr_code = RQRCode::QRCode.new(item[:url])
