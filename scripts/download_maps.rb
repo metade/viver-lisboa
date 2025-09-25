@@ -603,7 +603,12 @@ class GoogleMyMapsDownloader
     front_matter_hash["title"] = front_matter_hash["proposta"]
     front_matter_hash["description"] = front_matter_hash["sumario"]
     if front_matter_hash["gx_media_links"]
-      front_matter_hash["image"] = front_matter_hash["gx_media_links"].split(" ").first
+      image_path = front_matter_hash["gx_media_links"].split(" ").first
+      front_matter_hash["image"] = if freguesia_slug
+        "https://#{freguesia_slug}.viver-lisboa.org#{image_path}"
+      else
+        "https://www.viver-lisboa.org#{image_path}"
+      end
     end
 
     # Add geometry information from geographical features
