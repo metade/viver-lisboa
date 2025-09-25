@@ -351,14 +351,22 @@ layout: default
             legendItems.forEach((item) => {
                 if (
                     selectedEixo &&
-                    item.getAttribute("data-eixo-filter") === selectedEixo
+                    item.getAttribute("data-eixo") === selectedEixo
                 ) {
-                    item.style.backgroundColor = "rgba(0, 0, 0, 0.1)";
+                    item.style.backgroundColor = "#0d6efd";
+                    item.style.color = "white";
                     item.style.borderRadius = "0.375rem";
                     item.style.padding = "0.25rem 0.5rem";
+                    item.style.fontWeight = "bold";
+                    item.style.transform = "scale(1.05)";
+                    item.style.transition = "all 0.2s ease";
                 } else {
                     item.style.backgroundColor = "transparent";
+                    item.style.color = "";
                     item.style.padding = "0";
+                    item.style.fontWeight = "";
+                    item.style.transform = "scale(1)";
+                    item.style.transition = "all 0.2s ease";
                 }
             });
         }
