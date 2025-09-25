@@ -599,6 +599,13 @@ class GoogleMyMapsDownloader
 
     front_matter_hash["proposta"] ||= front_matter_hash["name"]
 
+    # SEO / Social tags
+    front_matter_hash["title"] = front_matter_hash["proposta"]
+    front_matter_hash["description"] = front_matter_hash["sumario"]
+    if front_matter_hash["gx_media_links"]
+      front_matter_hash["image"] = front_matter_hash["gx_media_links"].split(" ").first
+    end
+
     # Add geometry information from geographical features
     if group["has_map_location"] && group["geographical_features"].any?
       # Use the first geographical feature's geometry
