@@ -99,13 +99,15 @@ layout: default
 
                 <!-- Action buttons -->
                 <div class="d-flex flex-wrap gap-3 mb-5">
+                    {% if page.geometry %}
                     <a
-                        href="{{ page.freguesia_slug | freguesia_relative_url }}"
+                        href="{{ page.freguesia_slug | freguesia_relative_url }}#{{ page.slug }}"
                         class="btn btn-primary btn-lg"
                     >
                         <i class="bi bi-map-fill me-2"></i>
                         Ver no Mapa
                     </a>
+                    {% endif %}
 
                     <button
                         class="btn btn-outline-primary btn-lg"

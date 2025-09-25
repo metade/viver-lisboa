@@ -138,6 +138,84 @@ document.addEventListener("DOMContentLoaded", function () {
   //   console.log("Map clicked at:", e.lngLat);
   // });
 
+  // Function to highlight feature by slug from URL anchor
+  function highlightFeatureBySlug(slug) {
+    if (!slug) return;
+
+    console.log(`Looking for feature with slug: ${slug}`);
+
+    // Query all propostas features to find the one with matching slug
+    const allFeatures = map.querySourceFeatures("pmtiles-source", {
+      sourceLayer: "propostas",
+    });
+
+    const targetFeature = allFeatures.find(
+      (feature) => feature.properties.slug === slug,
+    );
+
+    if (targetFeature) {
+      console.log(`Found feature with slug ${slug}:`, targetFeature);
+
+      // Remove previous selection styling
+      removeSelectionStyling();
+
+      // Highlight based on geometry type
+      const geometryType = targetFeature.geometry.type;
+      if (geometryType === "Point") {
+        highlightMarker(targetFeature);
+      } else if (
+        geometryType === "Polygon" ||
+        geometryType === "MultiPolygon"
+      ) {
+        highlightPolygon(targetFeature);
+      } else if (
+        geometryType === "LineString" ||
+        geometryType === "MultiLineString"
+      ) {
+        highlightLineString(targetFeature);
+      }
+
+      // Center map on the feature
+      const bounds = new maplibregl.LngLatBounds();
+      const geometry = targetFeature.geometry;
+
+      if (geometry.type === "Point") {
+        bounds.extend(geometry.coordinates);
+        map.flyTo({
+          center: geometry.coordinates,
+          zoom: 17,
+          duration: 1500,
+        });
+      } else if (geometry.type === "Polygon") {
+        geometry.coordinates[0].forEach((coord) => bounds.extend(coord));
+        map.fitBounds(bounds, { padding: 50, duration: 1500 });
+      } else if (geometry.type === "MultiPolygon") {
+        geometry.coordinates.forEach((polygon) => {
+          polygon[0].forEach((coord) => bounds.extend(coord));
+        });
+        map.fitBounds(bounds, { padding: 50, duration: 1500 });
+      } else if (geometry.type === "LineString") {
+        geometry.coordinates.forEach((coord) => bounds.extend(coord));
+        map.fitBounds(bounds, { padding: 50, duration: 1500 });
+      }
+
+      // Show panel with feature details
+      const panelContent = createPanelContent(targetFeature.properties);
+      showPanelWithContent(panelContent);
+    } else {
+      console.log(`No feature found with slug: ${slug}`);
+    }
+  }
+
+  // Function to check URL anchor and highlight corresponding feature
+  function checkUrlAnchorAndHighlight() {
+    const hash = window.location.hash;
+    if (hash && hash.length > 1) {
+      const slug = hash.substring(1); // Remove the # character
+      highlightFeatureBySlug(slug);
+    }
+  }
+
   // Function to load propostas layer from PMTiles
   function loadPropostasLayer() {
     // Add PMTiles source
@@ -263,6 +341,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Add eixo legend to info panel
         addEixoLegendToInfoPanel();
+
+        // Check for URL anchor and highlight feature if present
+        checkUrlAnchorAndHighlight();
 
         const freguesiaFeatures = map.querySourceFeatures("pmtiles-source", {
           sourceLayer: "border",
@@ -682,6 +763,11 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   }
+
+  // Listen for hash changes to highlight features when URL changes
+  window.addEventListener("hashchange", function () {
+    checkUrlAnchorAndHighlight();
+  });
 
   // Add event listener for the more info button
   document.getElementById("moreInfoBtn").addEventListener("click", function () {
