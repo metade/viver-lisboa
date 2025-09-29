@@ -143,34 +143,16 @@ layout: default
                                     Clique no botão abaixo para carregar a
                                     pré-visualização do programa.
                                 </p>
-                                <div id="file-size-info" class="mb-4">
-                                    <span class="badge bg-secondary">
-                                        <i
-                                            class="bi bi-hourglass-split me-1"
-                                        ></i>
-                                        A verificar tamanho do ficheiro...
-                                    </span>
-                                </div>
                                 <button
                                     type="button"
                                     class="btn btn-primary btn-lg"
                                     id="load-pdf-btn"
                                     onclick="loadPdfViewer()"
-                                    disabled
                                 >
-                                    <span
-                                        class="spinner-border spinner-border-sm me-2"
-                                        role="status"
-                                        aria-hidden="true"
-                                        id="load-spinner"
-                                    ></span>
-                                    <i
-                                        class="bi bi-eye me-2"
-                                        id="load-icon"
-                                        style="display: none"
-                                    ></i>
+                                    <i class="bi bi-eye me-2"></i>
                                     Carregar Pré-visualização
                                 </button>
+                                <div id="file-size-info" class="mt-3"></div>
                             </div>
 
                             <!-- PDF Viewer (hidden initially) -->
@@ -320,46 +302,31 @@ layout: default
 
     async function checkFileSize() {
         const fileSizeInfo = document.getElementById("file-size-info");
-        const loadBtn = document.getElementById("load-pdf-btn");
-        const spinner = document.getElementById("load-spinner");
-        const icon = document.getElementById("load-icon");
 
         try {
             const response = await fetch("{{ page.programa_pdf }}", {
                 method: "HEAD",
             });
+
+            if (!response.ok) {
+                return; // Silently fail
+            }
+
             const contentLength = response.headers.get("content-length");
 
-            if (contentLength) {
+            if (contentLength && contentLength !== "0") {
                 const sizeInBytes = parseInt(contentLength);
                 const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(1);
 
                 fileSizeInfo.innerHTML = `
-                    <span class="badge bg-info">
-                        <i class="bi bi-file-earmark-pdf me-1"></i>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
                         Tamanho do ficheiro: ${sizeInMB} MB
-                    </span>
+                    </small>
                 `;
-
-                // Enable the load button
-                loadBtn.disabled = false;
-                spinner.style.display = "none";
-                icon.style.display = "inline";
-            } else {
-                throw new Error("Tamanho não disponível");
             }
         } catch (error) {
-            fileSizeInfo.innerHTML = `
-                <span class="badge bg-warning">
-                    <i class="bi bi-exclamation-triangle me-1"></i>
-                    Tamanho do ficheiro não disponível
-                </span>
-            `;
-
-            // Enable button anyway
-            loadBtn.disabled = false;
-            spinner.style.display = "none";
-            icon.style.display = "inline";
+            // Silently fail - don't show anything if file size can't be determined
         }
     }
 
