@@ -684,7 +684,8 @@ class GoogleMyMapsDownloader
       "description" => "Explore todas as propostas da coligação Viver Lisboa #{page_data["freguesia"]} para as Eleições Autárquicas 2025",
       "under_construction" => page_data["under_construction"],
       "eixos" => eixos.sort,
-      "eixos_colour_map" => eixos_colour_map
+      "eixos_colour_map" => eixos_colour_map,
+      "programa_pdf" => page_data["programa_pdf"]
     }
     index_content = <<~FRONTMATTER
       #{front_matter.to_yaml}
