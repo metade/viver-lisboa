@@ -106,7 +106,12 @@ layout: default
                             <i class="bi bi-file-pdf me-2"></i>
                             Pré-visualização do Programa
                         </h6>
-                        <div class="btn-group btn-group-sm" role="group">
+                        <div
+                            class="btn-group btn-group-sm"
+                            role="group"
+                            id="pdf-controls"
+                            style="display: none"
+                        >
                             <button
                                 type="button"
                                 class="btn btn-outline-secondary"
@@ -125,10 +130,58 @@ layout: default
                     </div>
                     <div class="card-body p-0">
                         <div id="pdf-container" class="position-relative">
+                            <!-- PDF Load Prompt -->
+                            <div id="pdf-load-prompt" class="text-center py-5">
+                                <i
+                                    class="bi bi-file-pdf-fill text-danger mb-3"
+                                    style="font-size: 4rem"
+                                ></i>
+                                <h5 class="mb-3">
+                                    Carregar Pré-visualização do PDF
+                                </h5>
+                                <p class="text-muted mb-3">
+                                    Clique no botão abaixo para carregar a
+                                    pré-visualização do programa.
+                                </p>
+                                <div id="file-size-info" class="mb-4">
+                                    <span class="badge bg-secondary">
+                                        <i
+                                            class="bi bi-hourglass-split me-1"
+                                        ></i>
+                                        A verificar tamanho do ficheiro...
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="btn btn-primary btn-lg"
+                                    id="load-pdf-btn"
+                                    onclick="loadPdfViewer()"
+                                    disabled
+                                >
+                                    <span
+                                        class="spinner-border spinner-border-sm me-2"
+                                        role="status"
+                                        aria-hidden="true"
+                                        id="load-spinner"
+                                    ></span>
+                                    <i
+                                        class="bi bi-eye me-2"
+                                        id="load-icon"
+                                        style="display: none"
+                                    ></i>
+                                    Carregar Pré-visualização
+                                </button>
+                            </div>
+
+                            <!-- PDF Viewer (hidden initially) -->
                             <iframe
                                 id="pdf-viewer"
-                                src="{{ page.programa_pdf }}#toolbar=1&navpanes=1&scrollbar=1"
-                                style="width: 100%; height: 80vh; border: none"
+                                style="
+                                    width: 100%;
+                                    height: 80vh;
+                                    border: none;
+                                    display: none;
+                                "
                                 title="Programa {{ page.freguesia }} PDF"
                                 onerror="handlePdfError()"
                             ></iframe>
@@ -260,9 +313,87 @@ layout: default
 </div>
 
 <script>
+    // Check file size on page load
+    document.addEventListener("DOMContentLoaded", function () {
+        checkFileSize();
+    });
+
+    async function checkFileSize() {
+        const fileSizeInfo = document.getElementById("file-size-info");
+        const loadBtn = document.getElementById("load-pdf-btn");
+        const spinner = document.getElementById("load-spinner");
+        const icon = document.getElementById("load-icon");
+
+        try {
+            const response = await fetch("{{ page.programa_pdf }}", {
+                method: "HEAD",
+            });
+            const contentLength = response.headers.get("content-length");
+
+            if (contentLength) {
+                const sizeInBytes = parseInt(contentLength);
+                const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(1);
+
+                fileSizeInfo.innerHTML = `
+                    <span class="badge bg-info">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>
+                        Tamanho do ficheiro: ${sizeInMB} MB
+                    </span>
+                `;
+
+                // Enable the load button
+                loadBtn.disabled = false;
+                spinner.style.display = "none";
+                icon.style.display = "inline";
+            } else {
+                throw new Error("Tamanho não disponível");
+            }
+        } catch (error) {
+            fileSizeInfo.innerHTML = `
+                <span class="badge bg-warning">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Tamanho do ficheiro não disponível
+                </span>
+            `;
+
+            // Enable button anyway
+            loadBtn.disabled = false;
+            spinner.style.display = "none";
+            icon.style.display = "inline";
+        }
+    }
+
+    function loadPdfViewer() {
+        const prompt = document.getElementById("pdf-load-prompt");
+        const iframe = document.getElementById("pdf-viewer");
+        const controls = document.getElementById("pdf-controls");
+        const loadBtn = document.getElementById("load-pdf-btn");
+
+        // Show loading state
+        loadBtn.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            A carregar...
+        `;
+        loadBtn.disabled = true;
+
+        // Set iframe source and show it
+        iframe.src = "{{ page.programa_pdf }}#toolbar=1&navpanes=1&scrollbar=1";
+        iframe.style.display = "block";
+
+        // Hide prompt and show controls
+        prompt.style.display = "none";
+        controls.style.display = "block";
+
+        // Add load event listener
+        iframe.onload = function () {
+            document.getElementById("pdf-error").classList.add("d-none");
+        };
+    }
+
     function handlePdfError() {
         document.getElementById("pdf-viewer").style.display = "none";
         document.getElementById("pdf-error").classList.remove("d-none");
+        document.getElementById("pdf-controls").style.display = "none";
     }
 
     function toggleFullscreen() {
@@ -316,10 +447,5 @@ layout: default
             iframe.style.height = "80vh";
             if (btn) btn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i>';
         }
-    });
-
-    // Handle PDF load success (remove error fallback)
-    document.getElementById("pdf-viewer").addEventListener("load", function () {
-        document.getElementById("pdf-error").classList.add("d-none");
     });
 </script>
