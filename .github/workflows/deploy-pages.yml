@@ -33,6 +33,8 @@ jobs:
         env:
           JEKYLL_ENV: production
           BUNDLE_WITHOUT: development:test
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
         run: |
           bundle exec rake build
 
