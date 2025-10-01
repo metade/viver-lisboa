@@ -5,11 +5,15 @@ gem "jekyll", "~> 4.4.1"
 gem "logger"
 gem "http", "~> 5.0"
 gem "activesupport"
+gem "deepl-rb", "~> 2.5"
+gem "google-apis-sheets_v4", "~> 0.28"
+gem "googleauth", "~> 1.5"
 gem "nokogiri", "~> 1.15"
 gem "mini_magick", "~> 4.12"
 gem "rqrcode", "~> 2.0"
 gem "prawn", "~> 2.4"
 gem "chunky_png", "~> 1.4"
+gem "dotenv"
 
 # Jekyll plugins
 group :jekyll_plugins do
