@@ -12,31 +12,53 @@ layout: default
                             {% if page.freguesia_slug %}
                             <li class="breadcrumb-item">
                                 <a href="{{ page.freguesia_slug | freguesia_relative_url }}">
-                                    <i class="bi bi-map-fill"></i> Mapa
+                                    <i class="bi bi-map-fill"></i>
+                                    {% if page.language == 'en' %}
+                                        Map
+                                    {% else %}
+                                        Mapa
+                                    {% endif %}
                                 </a>
                             </li>
                             {% endif %}
                             {% if page.programa_pdf %}
                             <li class="breadcrumb-item">
                                 <a href="/freguesias/{{ page.freguesia_slug }}/programa">
-                                    <i class="bi bi-file-pdf"></i> Programa
+                                    <i class="bi bi-file-pdf"></i>
+                                    {% if page.language == 'en' %}
+                                        Program
+                                    {% else %}
+                                        Programa
+                                    {% endif %}
                                 </a>
                             </li>
                             {% endif %}
                             {% if page.freguesia_slug %}
                             <li class="breadcrumb-item active" aria-current="page">
-                                <i class="bi bi-list-ul"></i> Propostas
+                                <i class="bi bi-list-ul"></i>
+                                {% if page.language == 'en' %}
+                                    Proposals
+                                {% else %}
+                                    Propostas
+                                {% endif %}
                             </li>
                             {% endif %}
                         </ol>
                     </nav>
 
                     <h1 class="display-4 fw-bold mb-2">
-                        {{ page.title | default: "Todas as Propostas" }}
+                        {% if page.language == 'en' %}
+                            {{ page.title | default: "All Proposals" }}
+                        {% else %}
+                            {{ page.title | default: "Todas as Propostas" }}
+                        {% endif %}
                     </h1>
                     <p class="lead mb-0">
-                        {{ page.description | default: "Conheça as nossas
-                        propostas para transformar Lisboa" }}
+                        {% if page.language == 'en' %}
+                            {{ page.description | default: "Learn about our proposals to transform Lisbon" }}
+                        {% else %}
+                            {{ page.description | default: "Conheça as nossas propostas para transformar Lisboa" }}
+                        {% endif %}
                     </p>
                 </div>
             </div>
@@ -54,7 +76,11 @@ layout: default
                     <div class="card-body">
                         <h6 class="card-title mb-3">
                             <i class="bi bi-palette-fill me-2"></i>
-                            Eixos das Propostas
+                            {% if page.language == 'en' %}
+                                Proposal Categories
+                            {% else %}
+                                Eixos das Propostas
+                            {% endif %}
                         </h6>
                         <div id="eixoLegend" class="d-flex flex-wrap gap-2">
                             {% for eixo in page.eixos %}
@@ -70,7 +96,11 @@ layout: default
                                 id="clearEixoFilter"
                             >
                                 <i class="bi bi-x-circle me-1"></i>
-                                Mostrar Todos
+                                {% if page.language == 'en' %}
+                                    Show All
+                                {% else %}
+                                    Mostrar Todos
+                                {% endif %}
                             </button>
                         </div>
                     </div>
@@ -90,7 +120,11 @@ layout: default
                         class="btn btn-outline-primary"
                     >
                         <i class="bi bi-map-fill me-2"></i>
-                        Ver no Mapa
+                        {% if page.language == 'en' %}
+                            View on Map
+                        {% else %}
+                            Ver no Mapa
+                        {% endif %}
                     </a>
                     {% endif %}
                     {% if page.programa_pdf %}
@@ -99,7 +133,11 @@ layout: default
                         class="btn btn-outline-primary"
                     >
                         <i class="bi bi-file-pdf me-2"></i>
-                        Ver programa completo (PDF)
+                        {% if page.language == 'en' %}
+                            View full program (PDF)
+                        {% else %}
+                            Ver programa completo (PDF)
+                        {% endif %}
                     </a>
                     {% endif %}
                     <div class="ms-auto">
@@ -107,7 +145,7 @@ layout: default
                             type="text"
                             class="form-control"
                             id="searchPropostas"
-                            placeholder="Pesquisar propostas..."
+                            placeholder="{% if page.language == 'en' %}Search proposals...{% else %}Pesquisar propostas...{% endif %}"
                             style="min-width: 300px"
                         />
                     </div>
@@ -120,9 +158,19 @@ layout: default
     <div class="container mb-5">
         <div class="row g-4" id="propostasGrid">
             <!-- Automatically generate cards from proposta pages -->
-            {% comment %} Find all pages in the same directory as current file
+            {% comment %} Find all pages in the same directory as current file and filter by language
             {% endcomment %}
-            {% assign all_propostas = site.pages | pages_in_same_directory: page %}
+            {% comment %} Find all pages based on language {% endcomment %}
+            {% if page.language == 'en' %}
+                {% comment %} For English pages, look for en.md files in proposta subdirectories {% endcomment %}
+                {% comment %} Structure: freguesias/arroios/propostas/proposta/en.md {% endcomment %}
+                {% assign current_dir = page.path | split: '/' | slice: 0, -1 | join: '/' | append: '/' %}
+                {% assign all_pages = site.pages | where_exp: 'item', 'item.path contains current_dir' %}
+                {% assign all_propostas = all_pages | where: 'language', 'en' %}
+            {% else %}
+                {% assign all_pages = site.pages | pages_in_same_directory: page %}
+                {% assign all_propostas = all_pages | where_exp: 'item', 'item.language != "en"' %}
+            {% endif %}
             {% for proposta in all_propostas %}
             <div class="col-lg-4 col-md-6">
                 <div class="card h-100 shadow-sm proposta-card">
@@ -199,7 +247,11 @@ layout: default
                                     href="{{ proposta | freguesia_proposta_url }}"
                                     class="btn btn-primary btn-sm me-auto text-nowrap flex-shrink-0"
                                 >
-                                    Ver Detalhes
+                                    {% if page.language == 'en' %}
+                                        View Details
+                                    {% else %}
+                                        Ver Detalhes
+                                    {% endif %}
                                 </a>
                                 {% if proposta.eixo %}
                                 <small
@@ -225,10 +277,18 @@ layout: default
                             style="font-size: 3rem"
                         ></i>
                         <h3 class="text-muted mt-3">
-                            Nenhuma proposta disponível
+                            {% if page.language == 'en' %}
+                                No proposals available
+                            {% else %}
+                                Nenhuma proposta disponível
+                            {% endif %}
                         </h3>
                         <p class="text-muted">
-                            As propostas serão adicionadas em breve
+                            {% if page.language == 'en' %}
+                                Proposals will be added soon
+                            {% else %}
+                                As propostas serão adicionadas em breve
+                            {% endif %}
                         </p>
                     </div>
                 </div>
@@ -238,8 +298,20 @@ layout: default
             <!-- No results message -->
             <div id="noResults" class="text-center py-5" style="display: none">
                 <i class="bi bi-search text-muted" style="font-size: 3rem"></i>
-                <h3 class="text-muted mt-3">Nenhuma proposta encontrada</h3>
-                <p class="text-muted">Tente pesquisar com outros termos</p>
+                <h3 class="text-muted mt-3">
+                    {% if page.language == 'en' %}
+                        No proposals found
+                    {% else %}
+                        Nenhuma proposta encontrada
+                    {% endif %}
+                </h3>
+                <p class="text-muted">
+                    {% if page.language == 'en' %}
+                        Try searching with different terms
+                    {% else %}
+                        Tente pesquisar com outros termos
+                    {% endif %}
+                </p>
             </div>
         </div>
     </div>

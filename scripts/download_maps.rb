@@ -199,7 +199,6 @@ class GoogleMyMapsDownloader
     # Add all combined properties as translated front matter variables
     properties.each do |key, value|
       next if key == "slug" # Already added
-      next if key == "gx_media_links" # Don't translate media links
       next if ["description", "tessellate", "extrude", "visibility", "coordinates", "styleUrl", "styleHash"].include?(key)
       next if value.nil? || value.to_s.strip.empty?
 
@@ -209,6 +208,8 @@ class GoogleMyMapsDownloader
       # Translate the value if it's text
       translated_value = if value.to_s.match?(/^https?:\/\//) || value.to_s.start_with?("./")
         # URLs or file paths - don't translate
+        value.to_s
+      elsif key == "gx_media_links"
         value.to_s
       elsif value.to_s.include?("\n") || value.to_s.length > 10
         # Multi-line or longer text - translate

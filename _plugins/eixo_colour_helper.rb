@@ -17,6 +17,8 @@ module Jekyll
       propostas_page = site.pages.find { |page|
         page.path == "freguesias/#{freguesia_slug}/propostas/index.md"
       }
+      return {} if propostas_page.nil?
+
       propostas_page["eixos_colour_map"] || {}
     end
 
