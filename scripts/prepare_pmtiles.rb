@@ -1,11 +1,21 @@
 class PreparePmtiles
-  def initialize(freguesia_slug:)
+  def initialize(freguesia_slug:, language: nil)
     @freguesia_slug = freguesia_slug
-    @output = "assets/data/#{freguesia_slug}.pmtiles"
-    @sources = [
-      "tmp/#{freguesia_slug}/propostas.geojson",
-      "data/freguesias/#{freguesia_slug}/border.geojson"
-    ]
+    @language = language
+
+    if @language
+      @output = "assets/data/#{freguesia_slug}-#{language}.pmtiles"
+      @sources = [
+        "tmp/#{freguesia_slug}/propostas-#{language}.geojson",
+        "data/freguesias/#{freguesia_slug}/border.geojson"
+      ]
+    else
+      @output = "assets/data/#{freguesia_slug}.pmtiles"
+      @sources = [
+        "tmp/#{freguesia_slug}/propostas.geojson",
+        "data/freguesias/#{freguesia_slug}/border.geojson"
+      ]
+    end
   end
 
   def prepare
@@ -31,7 +41,8 @@ class PreparePmtiles
     $stdout.print stdout
     $stderr.print stderr
 
-    puts "✅ Successfully generated PMTiles: #{@output}"
+    lang_suffix = @language ? " (#{@language})" : ""
+    puts "✅ Successfully generated PMTiles#{lang_suffix}: #{@output}"
     puts "   Layers included: #{@sources.map { |f| File.basename(f, ".geojson") }.join(", ")}"
     puts "   File size: #{File.size("#{@output}")} bytes"
   end

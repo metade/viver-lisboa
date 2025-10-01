@@ -3,6 +3,7 @@ require "http"
 require "rake/clean"
 require "open3"
 require "jekyll"
+require "dotenv/load"
 
 # Load the downloader class
 require_relative "scripts/download_maps"
@@ -21,8 +22,27 @@ def process_freguesia(freguesia_slug, page_data)
   )
   downloader.download_and_process
 
+  # Generate main PMTiles
   pmtiles_preparer = PreparePmtiles.new(freguesia_slug: freguesia_slug)
   pmtiles_preparer.prepare
+
+  # Generate translated PMTiles if translations are available
+  if page_data["translation_cache_id"] &&
+      page_data["translations"] &&
+      page_data["translations"].is_a?(Array) &&
+      page_data["translations"].any?
+
+    puts "\nGenerating translated PMTiles for languages: #{page_data["translations"].join(", ")}"
+
+    page_data["translations"].each do |language|
+      puts "Generating PMTiles for language: #{language}"
+      translated_pmtiles_preparer = PreparePmtiles.new(
+        freguesia_slug: freguesia_slug,
+        language: language
+      )
+      translated_pmtiles_preparer.prepare
+    end
+  end
 end
 
 # Helper method to initialize Jekyll site and get freguesia pages

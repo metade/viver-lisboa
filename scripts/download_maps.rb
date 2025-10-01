@@ -10,6 +10,7 @@ require "active_support/core_ext/object/blank"
 require "yaml"
 require "mini_magick"
 require_relative "qr_code_generator"
+require_relative "translate"
 
 class GoogleMyMapsDownloader
   attr_reader :valid_features, :page_data, :freguesia_slug, :output_file, :local
@@ -32,6 +33,10 @@ class GoogleMyMapsDownloader
     @grouped_propostas = {}
     @downloaded_images = {}
     @images_dir = "assets/data/images"
+    @translators = {}
+    @should_translate = should_translate?
+
+    setup_translators if @should_translate
   end
 
   def download_and_process
@@ -47,6 +52,11 @@ class GoogleMyMapsDownloader
     generate_propostas_index
     generate_programa_page
     write_final_geojson
+
+    if @should_translate
+      generate_translations
+    end
+
     print_summary
   end
 
@@ -58,6 +68,292 @@ class GoogleMyMapsDownloader
 
   def my_google_maps_id
     page_data["my_google_map_id"]
+  end
+
+  def should_translate?
+    page_data["translation_cache_id"] &&
+      page_data["translations"] &&
+      page_data["translations"].is_a?(Array) &&
+      page_data["translations"].any?
+  end
+
+  def setup_translators
+    return unless @should_translate
+
+    translation_cache_id = page_data["translation_cache_id"]
+    languages = page_data["translations"]
+
+    languages.each do |language|
+      log "Setting up translator for language: #{language}"
+      @translators[language] = Translate.new(language, translation_cache_id)
+    end
+  end
+
+  def generate_translations
+    return unless @should_translate
+
+    log "Generating translations for languages: #{@translators.keys.join(", ")}"
+
+    @translators.each do |language, translator|
+      log "Processing translations for language: #{language}"
+
+      # Generate translated GeoJSON
+      generate_translated_geojson(language, translator)
+
+      # Generate translated Jekyll pages
+      generate_translated_jekyll_pages(language, translator)
+
+      # Generate translated programa page
+      generate_translated_programa_page(language, translator)
+
+      # Generate translated propostas index
+      generate_translated_propostas_index(language, translator)
+    end
+
+    # Flush all translation caches
+    @translators.each { |_, translator| translator.flush_cache }
+  end
+
+  def generate_translated_geojson(language, translator)
+    return unless @geojson_data
+
+    log "Generating translated GeoJSON for #{language}..."
+
+    translated_geojson = deep_clone(@geojson_data)
+
+    translated_geojson["features"].each do |feature|
+      properties = feature["properties"]
+
+      # Translate text properties
+      properties.each do |key, value|
+        next unless value.is_a?(String)
+        next if value.strip.empty?
+        next if key == "slug" # Don't translate slugs
+        next if key == "gx_media_links" # Don't translate media links
+        next if key == "coordinates" # Don't translate coordinates
+        next if key == "styleUrl" # Don't translate style URLs
+        next if key == "styleHash" # Don't translate style hashes
+        next if value.match?(/^https?:\/\//) # Don't translate URLs
+        next if value.start_with?("./") # Don't translate file paths
+        next if value.match?(/^\d+(\.\d+)?(,\s*\d+(\.\d+)?)*$/) # Don't translate coordinate strings
+
+        translated_value = translator.translate(value)
+        properties[key] = translated_value if translated_value
+      end
+    end
+
+    # Write translated GeoJSON
+    output_file = "tmp/#{@freguesia_slug}/propostas-#{language}.geojson"
+    File.write(output_file, JSON.pretty_generate(translated_geojson))
+    log "Generated translated GeoJSON: #{output_file}"
+  end
+
+  def generate_translated_jekyll_pages(language, translator)
+    log "Generating translated Jekyll pages for #{language}..."
+
+    generated_count = 0
+
+    @grouped_propostas.each do |slug, group|
+      generated_count += 1 if generate_translated_page_for_group(group, language, translator)
+    end
+
+    log "Generated #{generated_count} translated Jekyll pages for #{language}"
+  end
+
+  def generate_translated_page_for_group(group, language, translator)
+    slug = group["slug"]
+    return false unless slug && !slug.to_s.strip.empty?
+
+    # Create slug subdirectory for language files
+    slug_dir = "#{output_root_path}propostas/#{slug}"
+    FileUtils.mkdir_p(slug_dir)
+
+    page_path = "#{slug_dir}/#{language}.md"
+
+    # Generate translated front matter for the group
+    front_matter = generate_translated_front_matter_for_group(group, language, translator)
+
+    # Write the page
+    File.write(page_path, front_matter)
+    log "Generated translated page: #{page_path}"
+    true
+  end
+
+  def generate_translated_front_matter_for_group(group, language, translator)
+    properties = group["combined_properties"]
+
+    # Build front matter hash (start with original)
+    front_matter_hash = {
+      "layout" => "proposta",
+      "freguesia" => translator.translate(page_data["freguesia"]),
+      "freguesia_slug" => freguesia_slug,
+      "slug" => group["slug"],
+      "has_map_location" => group["has_map_location"],
+      "parties" => page_data["parties"],
+      "under_construction" => page_data["under_construction"],
+      "programa_pdf" => page_data["programa_pdf"],
+      "language" => language,
+      "canonical_slug" => group["slug"] # Keep reference to original
+    }
+
+    # Add all combined properties as translated front matter variables
+    properties.each do |key, value|
+      next if key == "slug" # Already added
+      next if key == "gx_media_links" # Don't translate media links
+      next if ["description", "tessellate", "extrude", "visibility", "coordinates", "styleUrl", "styleHash"].include?(key)
+      next if value.nil? || value.to_s.strip.empty?
+
+      # Clean the key name
+      clean_key = key.to_s.gsub(/[^a-zA-Z0-9_]/, "_").downcase
+
+      # Translate the value if it's text
+      translated_value = if value.to_s.match?(/^https?:\/\//) || value.to_s.start_with?("./")
+        # URLs or file paths - don't translate
+        value.to_s
+      elsif value.to_s.include?("\n") || value.to_s.length > 10
+        # Multi-line or longer text - translate
+        translator.translate(value.to_s)
+      else
+        # Short text - might be a label, translate
+        translator.translate(value.to_s)
+      end
+
+      front_matter_hash[clean_key] = translated_value
+    end
+
+    front_matter_hash["proposta"] ||= front_matter_hash["name"]
+
+    # SEO / Social tags (translated)
+    front_matter_hash["title"] = translator.translate(front_matter_hash["proposta"]) if front_matter_hash["proposta"]
+    front_matter_hash["description"] = translator.translate(front_matter_hash["sumario"]) if front_matter_hash["sumario"]
+
+    if front_matter_hash["gx_media_links"]
+      image_path = front_matter_hash["gx_media_links"].split(" ").first
+      front_matter_hash["image"] = if freguesia_slug
+        "https://#{freguesia_slug}.viver-lisboa.org#{image_path}"
+      else
+        "https://www.viver-lisboa.org#{image_path}"
+      end
+    end
+
+    # Add geometry information (same as original)
+    if group["has_map_location"] && group["geographical_features"].any?
+      first_geo_feature = group["geographical_features"].first
+      geometry = first_geo_feature["geometry"]
+
+      if geometry
+        front_matter_hash["geometry"] = {
+          "type" => geometry["type"]
+        }
+        if geometry["coordinates"]
+          front_matter_hash["geometry"]["coordinates"] = geometry["coordinates"]
+        end
+      end
+
+      if group["geographical_features"].length > 1
+        front_matter_hash["multiple_locations"] = true
+        front_matter_hash["location_count"] = group["geographical_features"].length
+      end
+    elsif !group["has_map_location"]
+      non_geo_with_coords = group["non_geographical_features"].find { |f| f["properties"]["coordinates"] }
+      if non_geo_with_coords
+        front_matter_hash["reference_coordinates"] = non_geo_with_coords["properties"]["coordinates"]
+      end
+    end
+
+    # Add feature count information
+    front_matter_hash["total_features"] = group["geographical_features"].length + group["non_geographical_features"].length
+    front_matter_hash["geographical_features"] = group["geographical_features"].length
+    front_matter_hash["non_geographical_features"] = group["non_geographical_features"].length
+
+    # Convert to YAML and build final front matter
+    front_matter = front_matter_hash.to_yaml
+    front_matter += "---\n\n"
+    front_matter += "<!-- This page was automatically generated and translated from Google My Maps data -->\n"
+    front_matter += "<!-- Language: #{language} -->\n"
+    front_matter += "<!-- To edit this proposal, update the Google My Maps data and re-run the download script -->\n"
+
+    total_features = group["geographical_features"].length + group["non_geographical_features"].length
+
+    if !group["has_map_location"]
+      front_matter += "<!-- This proposal does not have a specific map location -->\n"
+    elsif group["geographical_features"].length > 1
+      front_matter += "<!-- This proposal has #{group["geographical_features"].length} map locations -->\n"
+    end
+    if total_features > 1
+      front_matter += "<!-- This page combines #{total_features} features with the same slug -->\n"
+    end
+
+    front_matter
+  end
+
+  def generate_translated_programa_page(language, translator)
+    return unless page_data["programa_pdf"]
+
+    log "Generating translated programa page for #{language}..."
+
+    # Create programa subdirectory for language files
+    programa_dir = "#{output_root_path}programa"
+    FileUtils.mkdir_p(programa_dir)
+
+    programa_path = "#{programa_dir}/#{language}.md"
+
+    # Create translated programa page
+    front_matter = {
+      "layout" => "programa",
+      "title" => translator.translate("Programa"),
+      "freguesia" => translator.translate(page_data["freguesia"]),
+      "freguesia_slug" => freguesia_slug,
+      "parties" => page_data["parties"],
+      "programa_pdf" => page_data["programa_pdf"],
+      "language" => language
+    }
+
+    content = front_matter.to_yaml + "---\n\n"
+    content += "<!-- This page was automatically generated and translated -->\n"
+    content += "<!-- Language: #{language} -->\n"
+
+    File.write(programa_path, content)
+    log "Generated translated programa page: #{programa_path}"
+  end
+
+  def generate_translated_propostas_index(language, translator)
+    log "Generating translated propostas index for #{language}..."
+
+    propostas_dir = "#{output_root_path}propostas"
+    FileUtils.mkdir_p(propostas_dir)
+
+    index_path = "#{propostas_dir}/#{language}.html"
+
+    # Build eixo colour map for this context
+    eixos = Set.new
+    @grouped_propostas.each do |slug, group|
+      eixo = group.dig("combined_properties", "eixo")
+      eixos << eixo unless eixo.nil?
+    end
+    eixo_colour_map = build_eixo_colour_map(eixos)
+
+    front_matter = {
+      "layout" => "propostas",
+      "title" => translator.translate("Propostas"),
+      "freguesia" => translator.translate(page_data["freguesia"]),
+      "freguesia_slug" => freguesia_slug,
+      "parties" => page_data["parties"],
+      "under_construction" => page_data["under_construction"],
+      "eixo_colours" => eixo_colour_map,
+      "language" => language
+    }
+
+    content = front_matter.to_yaml + "---\n\n"
+    content += "<!-- This page was automatically generated and translated -->\n"
+    content += "<!-- Language: #{language} -->\n"
+
+    File.write(index_path, content)
+    log "Generated translated propostas index: #{index_path}"
+  end
+
+  def deep_clone(obj)
+    Marshal.load(Marshal.dump(obj))
   end
 
   def validate_requirements
