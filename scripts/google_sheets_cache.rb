@@ -1,6 +1,7 @@
 require "google/apis/sheets_v4"
 require "googleauth"
 require "json"
+require "stringio"
 
 class GoogleSheetsCache
   SCOPES = [Google::Apis::SheetsV4::AUTH_SPREADSHEETS].freeze
@@ -38,21 +39,41 @@ class GoogleSheetsCache
   private
 
   def authorize(credentials_path)
-    credentials_path ||= ENV["GOOGLE_APPLICATION_CREDENTIALS"] || "credentials.json"
-
-    if File.exist?(credentials_path)
+    # Try environment variable first (for CI/CD)
+    if ENV["GOOGLE_CREDENTIALS_JSON"]
+      puts "Using Google credentials from GOOGLE_CREDENTIALS_JSON environment variable"
+      credentials_json = JSON.parse(ENV["GOOGLE_CREDENTIALS_JSON"])
+      Google::Auth::ServiceAccountCredentials.make_creds(
+        json_key_io: StringIO.new(credentials_json.to_json),
+        scope: SCOPES
+      )
+    elsif credentials_path && File.exist?(credentials_path)
+      puts "Using Google credentials from file: #{credentials_path}"
       Google::Auth::ServiceAccountCredentials.make_creds(
         json_key_io: File.open(credentials_path),
         scope: SCOPES
       )
+    elsif File.exist?(ENV["GOOGLE_APPLICATION_CREDENTIALS"] || "credentials.json")
+      credentials_file = ENV["GOOGLE_APPLICATION_CREDENTIALS"] || "credentials.json"
+      puts "Using Google credentials from file: #{credentials_file}"
+      Google::Auth::ServiceAccountCredentials.make_creds(
+        json_key_io: File.open(credentials_file),
+        scope: SCOPES
+      )
     else
+      puts "Attempting to use default application credentials"
       # Fallback to default application credentials
       Google::Auth.get_application_default(SCOPES)
     end
+  rescue JSON::ParserError => e
+    raise "Failed to parse Google credentials JSON: #{e.message}. " \
+          "Make sure GOOGLE_CREDENTIALS_JSON contains valid JSON."
   rescue => e
     raise "Failed to authorize Google Sheets access: #{e.message}. " \
-          "Make sure you have valid credentials file at #{credentials_path} or " \
-          "set up Application Default Credentials."
+          "Options: 1) Set GOOGLE_CREDENTIALS_JSON env var with service account JSON, " \
+          "2) Set GOOGLE_APPLICATION_CREDENTIALS to credentials file path, " \
+          "3) Place credentials.json in project root, " \
+          "4) Use Application Default Credentials."
   end
 
   def load_sheet_cache(language)
